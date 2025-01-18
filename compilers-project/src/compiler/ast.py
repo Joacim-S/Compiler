@@ -9,7 +9,7 @@ class Literal(Expression):
   value: int | bool
   
 @dataclass
-class identifier(Expression):
+class Identifier(Expression):
   name: str
   
 @dataclass
