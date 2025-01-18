@@ -16,4 +16,4 @@ class Identifier(Expression):
 class BinaryOp(Expression):
   left: Expression
   op: str
-  rigt: Expression
+  right: Expression

@@ -9,7 +9,7 @@ class Location:
   def __eq__(self, other: object) -> bool:
     if not isinstance(other, Location):
       return NotImplemented
-    return self.file == 'TheLocationObjectThatIsEqualToAllLocations' or other.file == 'TheLocationObjectThatIsEqualToAllLocations'
+    return self.file == 'L' or other.file == 'L'
 
 @dataclass
 class Token:
@@ -28,7 +28,7 @@ def checkMatch(match: re.Match | None, type: str, tokens: list[Token], i: int, e
   return (tokens, i, error)
 
 def tokenize(source_code: str) -> list[Token]:
-  re_identifier = re.compile(r'[a-zA-Z_][0-9a-zA-Z_]+')
+  re_identifier = re.compile(r'[a-zA-Z_][0-9a-zA-Z_]*')
   re_int_lit = re.compile(r'[0-9]+')
   re_whitespace = re.compile(r'[ \n]+')
   re_operator = re.compile(r'\+|-|\*|/|=|<|>|==|!=|<=|>=')
@@ -43,23 +43,17 @@ def tokenize(source_code: str) -> list[Token]:
     
     match = re_comment.match(source_code, i)
     tokens, i, error = checkMatch(match, 'comment', tokens, i, error)
-    
     match = re_whitespace.match(source_code, i)
     tokens, i, error = checkMatch(match, 'whitespace', tokens, i, error)
-
     match = re_int_lit.match(source_code, i)
     tokens, i, error = checkMatch(match, 'int_literal', tokens, i, error)
-    
     match = re_identifier.match(source_code, i)
     tokens, i, error = checkMatch(match, 'identifier', tokens, i, error)
-    
     match = re_operator.match(source_code, i)
     tokens, i, error = checkMatch(match, 'operator', tokens, i, error)
-    
     match = re_punctuation.match(source_code, i)
     tokens, i, error = checkMatch(match, 'punctuation', tokens, i, error)
-
     if error:
-      raise ValueError('Syntax Error')
+      raise Exception(f'Syntax Error, tokens:{tokens}')
 
   return tokens
