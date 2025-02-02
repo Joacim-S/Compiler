@@ -35,6 +35,9 @@ def parse(tokens: list[Token]) -> ast.Expression:
     }
     if peek().text == '(':
       return parse_parenthesized()
+    
+    if peek().text == 'if':
+      return parse_condition()
 
     if peek().type not in types:
       raise Exception(f'{peek().loc}: expected type to be in {types.keys()}, "(", got {peek().type}')
@@ -79,6 +82,21 @@ def parse(tokens: list[Token]) -> ast.Expression:
     expr = parse_expression()
     consume(')')
     return expr
+  
+  def parse_condition() -> ast.Expression:
+    consume('if')
+    con = parse_expression()
+    consume('then')
+    then = parse_expression()
+    el = None
+    if peek().text == 'else':
+      consume()
+      el = parse_expression()
+    return ast.Condition(
+      con,
+      then,
+      el
+    )
   
   parsed = parse_expression()
   if peek().type != 'end':

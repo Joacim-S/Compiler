@@ -17,3 +17,9 @@ class BinaryOp(Expression):
   left: Expression
   op: str
   right: Expression
+
+@dataclass
+class Condition(Expression):
+  con: Expression
+  then: Expression
+  el: Expression | None
