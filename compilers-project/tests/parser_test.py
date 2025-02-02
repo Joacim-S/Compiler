@@ -45,3 +45,17 @@ def test_addition_multiplication_presedence() -> None:
       ast.Literal(3)
     )
   )
+  
+def test_garbage_at_end_throws_error() -> None:
+  tokens = [
+    Token(loc=L, type='int_literal', text='1'),
+    Token(loc=L, type='operator', text='+'),
+    Token(loc=L, type='int_literal', text='2'),
+    Token(loc=L, type='identifier', text='a'),
+  ]
+  try:
+    parse(tokens)
+  except Exception as exc:
+    assert exc.args[0] == "Unexpected token a at Location(file='L', line=-1, column=-1)"
+
+test_garbage_at_end_throws_error()

@@ -33,9 +33,12 @@ def parse(tokens: list[Token]) -> ast.Expression:
       'int_literal': lambda a : ast.Literal(int(a)),
       'identifier': ast.Identifier
     }
+    if peek().text == '(':
+      return parse_parenthesized()
 
     if peek().type not in types:
-      raise Exception(f'{peek().loc}: expected type to be in {types.keys()}, got {peek().type}')
+      raise Exception(f'{peek().loc}: expected type to be in {types.keys()}, "(", got {peek().type}')
+
     token = consume()
     return types[token.type](token.text)
 
@@ -69,7 +72,16 @@ def parse(tokens: list[Token]) -> ast.Expression:
         operator,
         right
       )
-#TODO: Don't allow garbage in the end
     return left
   
-  return parse_expression()
+  def parse_parenthesized() -> ast.Expression:
+    consume('(')
+    expr = parse_expression()
+    consume(')')
+    return expr
+  
+  parsed = parse_expression()
+  if peek().type != 'end':
+    raise Exception(f'Unexpected token {peek().text} at {peek().loc}')
+  
+  return parsed
