@@ -23,3 +23,8 @@ class Condition(Expression):
   con: Expression
   then: Expression
   el: Expression | None
+  
+@dataclass
+class Function(Expression):
+  name: Expression
+  params: list[Expression]

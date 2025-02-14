@@ -21,10 +21,10 @@ def parse(tokens: list[Token]) -> ast.Expression:
     nonlocal pos
     token = peek()
     if isinstance(expected, str) and token.text != expected:
-      raise Exception(f'{token.loc}: expected "{expected}"')
+      raise Exception(f'{token.loc}: expected "{expected}" got "{token.text}"')
     if isinstance(expected, list) and token.text not in expected:
       comma_separated = ", ".join([f'"{e}"' for e in expected])
-      raise Exception(f'{token.loc}: expected one of: {comma_separated}')
+      raise Exception(f'{token.loc}: expected one of: {comma_separated} got "{token.text}"')
     pos += 1
     return token
 
@@ -39,11 +39,19 @@ def parse(tokens: list[Token]) -> ast.Expression:
     if peek().text == 'if':
       return parse_condition()
 
-    if peek().type not in types:
-      raise Exception(f'{peek().loc}: expected type to be in {types.keys()}, "(", got {peek().type}')
-
-    token = consume()
-    return types[token.type](token.text)
+    if peek().type == 'int_literal':
+      token = consume()
+      return ast.Literal(int(token.text))
+    
+    if peek().type == 'identifier':
+      token = consume()
+      if peek().text == '(':
+        return parse_function_call(ast.Identifier(token.text))
+      
+      return ast.Identifier(token.text)
+        
+      
+    raise Exception(f'{peek().loc}: expected type to be in {types.keys()}, "(", got {peek().type}')
 
   def parse_term() -> ast.Expression:
     left = parse_factor()
@@ -97,9 +105,22 @@ def parse(tokens: list[Token]) -> ast.Expression:
       then,
       el
     )
+    
+  def parse_function_call(name: ast.Expression) -> ast.Expression:
+    consume('(')
+    params: list[ast.Expression] = []
+
+    if peek().text != ')':
+      params.append(parse_expression())
+      while peek().text == ',':
+        consume(',')
+        params.append(parse_expression())
+
+    consume(')')
+    return ast.Function(name, params)
   
   parsed = parse_expression()
   if peek().type != 'end':
-    raise Exception(f'Unexpected token {peek().text} at {peek().loc}')
+    raise Exception(f"Unexpected token '{peek().text}' at {peek().loc}")
   
   return parsed

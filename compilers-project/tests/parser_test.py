@@ -56,7 +56,7 @@ def test_garbage_at_end_throws_error() -> None:
   try:
     parse(tokens)
   except Exception as exc:
-    assert exc.args[0] == "Unexpected token a at Location(file='L', line=-1, column=-1)"
+    assert exc.args[0] == "Unexpected token 'a' at Location(file='L', line=-1, column=-1)"
     
 def test_paranthesis() -> None:
   tokens = [
@@ -137,3 +137,27 @@ def test_if_as_part_of_expression() -> None:
       ast.Literal(3)
     ),
   )
+  
+def test_function_call_no_params() -> None:
+  tokens = [
+    Token(loc=L, type='identifier', text='f'),
+    Token(loc=L, type='punctuation', text='('),
+    Token(loc=L, type='punctuation', text=')'),
+  ]
+  assert parse(tokens) == ast.Function(
+    ast.Identifier('f'), [])
+  
+def test_function_call_single_params() -> None:
+  tokens = [
+    Token(loc=L, type='identifier', text='f'),
+    Token(loc=L, type='punctuation', text='('),
+    Token(loc=L, type='int_literal', text='2'),
+    Token(loc=L, type='punctuation', text=','),
+    Token(loc=L, type='identifier', text='a'),
+    Token(loc=L, type='punctuation', text=')'),
+  ]
+  assert parse(tokens) == ast.Function(
+    ast.Identifier('f'), [
+      ast.Literal(2),
+      ast.Identifier('a'),
+    ])
