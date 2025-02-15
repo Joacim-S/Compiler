@@ -1,8 +1,21 @@
 from compiler.tokenizer import Token
 import compiler.ast as ast
 
+
 def parse(tokens: list[Token]) -> ast.Expression:
   pos = 0
+  
+  precedence = [
+    ['='],
+    ['or'],
+    ['and'],
+    ['==', '!='],
+    ['<', '<=', '>', '>='],
+    ['+', '-'],
+    ['*', '/', '%'],
+    ['-', 'not'],
+  ]
+
 
   def peek() -> Token:
     if len(tokens) == 0:
@@ -31,7 +44,8 @@ def parse(tokens: list[Token]) -> ast.Expression:
   def parse_factor() -> ast.Expression:
     types = {
       'int_literal': lambda a : ast.Literal(int(a)),
-      'identifier': ast.Identifier
+      'identifier': ast.Identifier,
+      'operator': str
     }
     if peek().text == '(':
       return parse_parenthesized()
@@ -43,46 +57,38 @@ def parse(tokens: list[Token]) -> ast.Expression:
       token = consume()
       return ast.Literal(int(token.text))
     
+    if peek().text in ['-', 'not']:
+      token = consume()
+      op = token.text
+      expr = parse_expression()
+      return ast.Unary(op, expr)
+    
     if peek().type == 'identifier':
       token = consume()
       if peek().text == '(':
         return parse_function_call(ast.Identifier(token.text))
       
       return ast.Identifier(token.text)
-        
       
     raise Exception(f'{peek().loc}: expected type to be in {types.keys()}, "(", got {peek().type}')
 
-  def parse_term() -> ast.Expression:
-    left = parse_factor()
-    while peek().text in ['*', '/']:
+  def parse_expression(level: int = 0) -> ast.Expression:
+    if level == len(precedence)-1:
+      left = parse_factor()
+    else:
+      left = parse_expression(level+1)
+    while get_precedence(peek().text) == level:
       operator_token = consume()
       operator = operator_token.text
 
-      right = parse_factor()
+      right = parse_expression()
 
       left = ast.BinaryOp(
         left,
         operator,
         right
       )
-    
-    return left
 
-  def parse_expression() -> ast.Expression:
-    left = parse_term()
-
-    while peek().text in ['+', '-']:
-      operator_token = consume()
-      operator = operator_token.text
-
-      right = parse_term()
-
-      left = ast.BinaryOp(
-        left,
-        operator,
-        right
-      )
     return left
   
   def parse_parenthesized() -> ast.Expression:
@@ -119,8 +125,19 @@ def parse(tokens: list[Token]) -> ast.Expression:
     consume(')')
     return ast.Function(name, params)
   
+  def get_precedence(text: str) -> int:
+    for i in range(len(precedence)):
+      if text in precedence[i]:
+        return i
+
+    return len(precedence)
+  
+  def parse_assignment(name: ast.Expression) -> ast.Expression:
+    return name
+  
   parsed = parse_expression()
   if peek().type != 'end':
     raise Exception(f"Unexpected token '{peek().text}' at {peek().loc}")
+    
   
   return parsed

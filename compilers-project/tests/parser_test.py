@@ -4,6 +4,9 @@ import compiler.ast as ast
 
 L = Location('L',-1, -1)
 
+def test_single_character() -> None:
+  assert parse([Token(loc=L, type='identifier', text='a')]) == ast.Identifier('a')
+
 def test_one_plus_two_works() -> None:
   tokens = [
     Token(loc=L, type='int_literal', text='1'),
@@ -161,3 +164,61 @@ def test_function_call_single_params() -> None:
       ast.Literal(2),
       ast.Identifier('a'),
     ])
+
+def test_unary() -> None:
+  tokens = [
+    Token(loc=L, type='identifier', text='not'),
+    Token(loc=L, type='identifier', text='a'),
+  ]
+  assert parse(tokens) == ast.Unary(
+    'not',
+    ast.Identifier('a')
+  )
+  
+def test_unary_chain() -> None:
+  tokens = [
+    Token(loc=L, type='identifier', text='not'),
+    Token(loc=L, type='identifier', text='not'),
+    Token(loc=L, type='identifier', text='not'),
+    Token(loc=L, type='operator', text='-'),
+    Token(loc=L, type='identifier', text='a'),
+  ]
+  assert parse(tokens) == ast.Unary(
+    'not',
+    ast.Unary(
+      'not',
+      ast.Unary(
+        'not',
+        ast.Unary(
+          '-',
+          ast.Identifier('a')
+        )
+      )
+    )
+  )
+  
+  
+def test_comparison() -> None:
+  tokens = [
+    Token(loc=L, type='identifier', text='if'),
+    Token(loc=L, type='int_literal', text='2'),
+    Token(loc=L, type='operator', text='=='),
+    Token(loc=L, type='identifier', text='a'),
+    Token(loc=L, type='identifier', text='then'),
+    Token(loc=L, type='identifier', text='b')
+  ]
+  
+  assert parse(tokens) == ast.Condition(
+    ast.BinaryOp(
+      ast.Literal(2),
+      '==',
+      ast.Identifier('a')
+    ),
+    ast.Identifier('b')
+  )
+  
+'''def test_assignment() -> None:
+  tokens = [
+    Token(loc=L, type='identifier', text='a'),
+  ]
+'''

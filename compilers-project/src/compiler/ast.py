@@ -22,9 +22,19 @@ class BinaryOp(Expression):
 class Condition(Expression):
   con: Expression
   then: Expression
-  el: Expression | None
+  el: Expression | None = None
   
 @dataclass
 class Function(Expression):
   name: Expression
   params: list[Expression]
+  
+@dataclass
+class Unary(Expression):
+  op: str
+  val: Expression
+  
+@dataclass
+class Assignment(Expression):
+  name: Expression
+  val: Expression
