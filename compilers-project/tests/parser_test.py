@@ -49,6 +49,23 @@ def test_addition_multiplication_presedence() -> None:
     )
   )
   
+  tokens = [
+    Token(loc=L, type='int_literal', text='1'),
+    Token(loc=L, type='operator', text='*'),
+    Token(loc=L, type='int_literal', text='2'),
+    Token(loc=L, type='int_literal', text='+'),
+    Token(loc=L, type='int_literal', text='3'),
+  ]
+  assert parse(tokens) == ast.BinaryOp(
+    right = ast.Literal(3),
+    op = '+',
+    left = ast.BinaryOp(
+      ast.Literal(1),
+      '*',
+      ast.Literal(2)
+    )
+  )
+  
 def test_garbage_at_end_throws_error() -> None:
   tokens = [
     Token(loc=L, type='int_literal', text='1'),
@@ -217,8 +234,52 @@ def test_comparison() -> None:
     ast.Identifier('b')
   )
   
-'''def test_assignment() -> None:
+def test_assignment() -> None:
   tokens = [
     Token(loc=L, type='identifier', text='a'),
+    Token(loc=L, type='operator', text='='),
+    Token(loc=L, type='identifier', text='b'),
   ]
-'''
+  
+  assert parse(tokens) == ast.BinaryOp(
+    ast.Identifier('a'),
+    '=',
+    ast.Identifier('b')
+  )
+  
+  tokens = [
+    Token(loc=L, type='identifier', text='a'),
+    Token(loc=L, type='operator', text='='),
+    Token(loc=L, type='identifier', text='b'),
+    Token(loc=L, type='operator', text='='),
+    Token(loc=L, type='identifier', text='c'),
+  ]
+  
+  assert parse(tokens) == ast.BinaryOp(
+    ast.Identifier('a'),
+    '=',
+    ast.BinaryOp(
+      ast.Identifier('b'),
+      '=',
+      ast.Identifier('c')
+    )
+  )
+
+def test_ors_ands() -> None:
+  tokens = [
+    Token(loc=L, type='identifier', text='a'),
+    Token(loc=L, type='operator', text='or'),
+    Token(loc=L, type='identifier', text='b'),
+    Token(loc=L, type='operator', text='or'),
+    Token(loc=L, type='identifier', text='c'),
+  ]
+  
+  assert parse(tokens) == ast.BinaryOp(
+    ast.BinaryOp(
+      ast.Identifier('a'),
+      'or',
+      ast.Identifier('b')
+    ),
+    'or',
+    ast.Identifier('c')
+  )

@@ -15,6 +15,10 @@ def parse(tokens: list[Token]) -> ast.Expression:
     ['*', '/', '%'],
     ['-', 'not'],
   ]
+  
+  right_associative_operators = [
+    '='
+  ]
 
 
   def peek() -> Token:
@@ -80,8 +84,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
     while get_precedence(peek().text) == level:
       operator_token = consume()
       operator = operator_token.text
-
-      right = parse_expression()
+      right = parse_expression(level+1)
 
       left = ast.BinaryOp(
         left,
