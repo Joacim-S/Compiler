@@ -75,6 +75,7 @@ def test_garbage_at_end_throws_error() -> None:
   ]
   try:
     parse(tokens)
+    assert False == True
   except Exception as exc:
     assert exc.args[0] == "Unexpected token 'a' at Location(file='L', line=-1, column=-1)"
     
@@ -164,7 +165,7 @@ def test_function_call_no_params() -> None:
     Token(loc=L, type='punctuation', text='('),
     Token(loc=L, type='punctuation', text=')'),
   ]
-  assert parse(tokens) == ast.Function(
+  assert parse(tokens) == ast.FunctionCall(
     ast.Identifier('f'), [])
   
 def test_function_call_single_params() -> None:
@@ -176,7 +177,7 @@ def test_function_call_single_params() -> None:
     Token(loc=L, type='identifier', text='a'),
     Token(loc=L, type='punctuation', text=')'),
   ]
-  assert parse(tokens) == ast.Function(
+  assert parse(tokens) == ast.FunctionCall(
     ast.Identifier('f'), [
       ast.Literal(2),
       ast.Identifier('a'),
@@ -268,9 +269,9 @@ def test_assignment() -> None:
 def test_ors_ands() -> None:
   tokens = [
     Token(loc=L, type='identifier', text='a'),
-    Token(loc=L, type='operator', text='or'),
+    Token(loc=L, type='identifier', text='or'),
     Token(loc=L, type='identifier', text='b'),
-    Token(loc=L, type='operator', text='or'),
+    Token(loc=L, type='identifier', text='or'),
     Token(loc=L, type='identifier', text='c'),
   ]
   
@@ -282,4 +283,241 @@ def test_ors_ands() -> None:
     ),
     'or',
     ast.Identifier('c')
+  )
+
+def test_complicated_assignments() -> None:
+  tokens = [
+    Token(loc=L, type='identifier', text='a'),
+    Token(loc=L, type='operator', text='='),
+    Token(loc=L, type='identifier', text='b'),
+    Token(loc=L, type='operator', text='+'),
+    Token(loc=L, type='int_literal', text='2'),
+    Token(loc=L, type='operator', text='='),
+    Token(loc=L, type='identifier', text='c'),
+    Token(loc=L, type='operator', text='='),
+    Token(loc=L, type='identifier', text='d'),
+    Token(loc=L, type='operator', text='+'),
+    Token(loc=L, type='int_literal', text='5'),
+  ]
+  
+  assert parse(tokens) == ast.BinaryOp(
+    ast.Identifier('a'),
+    '=',
+    ast.BinaryOp(
+      ast.BinaryOp(
+        ast.Identifier('b'),
+        '+',
+        ast.Literal(2)
+      ),
+      '=',
+      ast.BinaryOp(
+        ast.Identifier('c'),
+        '=',
+        ast.BinaryOp(
+          ast.Identifier('d'),
+          '+',
+          ast.Literal(5)
+        )
+      )
+    )
+  )
+
+def test_blocks() -> None:
+  tokens = [
+    Token(loc=L, type='identifier', text='{'),
+    Token(loc=L, type='identifier', text='{'),
+    Token(loc=L, type='identifier', text='a'),
+    Token(loc=L, type='identifier', text='}'),
+    Token(loc=L, type='identifier', text='{'),
+    Token(loc=L, type='identifier', text='b'),
+    Token(loc=L, type='identifier', text='}'),
+    Token(loc=L, type='identifier', text='}'),
+  ]
+
+  assert parse(tokens) == ast.Block(
+    [
+      ast.Block([ast.Identifier('a')],
+                ast.Identifier('a')),
+      ast.Block([ast.Identifier('b')],
+      ast.Identifier('b'))
+      ],
+    ast.Block([ast.Identifier('b')],
+              ast.Identifier('b')))
+
+  tokens = [
+    Token(loc=L, type='punctuation', text='{'),
+    Token(loc=L, type='identifier', text='a'),
+    Token(loc=L, type='identifier', text='a'),
+    Token(loc=L, type='punctuation', text='}'),
+  ]
+  
+  try:
+    parse(tokens)
+    assert False == True
+  except Exception as exc:
+    assert exc.args[0] == "Location(file='L', line=-1, column=-1): expected one of: ';', '}' got 'a'"
+  
+  tokens = [
+    Token(loc=L, type='punctuation', text='{'),
+    Token(loc=L, type='identifier', text='if'),
+    Token(loc=L, type='identifier', text='true'),
+    Token(loc=L, type='identifier', text='then'),
+    Token(loc=L, type='punctuation', text='{'),
+    Token(loc=L, type='identifier', text='a'),
+    Token(loc=L, type='punctuation', text='}'),
+    Token(loc=L, type='identifier', text='b'),
+    Token(loc=L, type='punctuation', text='}'),
+  ]
+  
+  assert parse(tokens) == ast.Block(
+    [
+      ast.Condition(
+        ast.Literal(True),
+        ast.Block(
+          [ast.Identifier('a')], ast.Identifier('a')
+        )
+      ),
+      ast.Identifier('b')
+      ], ast.Identifier('b')
+  )
+  
+  tokens = [
+    Token(loc=L, type='punctuation', text='{'),
+    Token(loc=L, type='identifier', text='if'),
+    Token(loc=L, type='identifier', text='true'),
+    Token(loc=L, type='identifier', text='then'),
+    Token(loc=L, type='punctuation', text='{'),
+    Token(loc=L, type='identifier', text='a'),
+    Token(loc=L, type='punctuation', text='}'),
+    Token(loc=L, type='punctuation', text=';'),
+    Token(loc=L, type='identifier', text='b'),
+    Token(loc=L, type='identifier', text='}'),
+  ]
+  
+  assert parse(tokens) == ast.Block(
+    [
+      ast.Condition(
+        ast.Literal(True),
+        ast.Block(
+          [ast.Identifier('a')], ast.Identifier('a')
+        )
+      ),
+      ast.Identifier('b')
+      ], ast.Identifier('b')
+  )
+  
+  tokens = [
+    Token(loc=L, type='punctuation', text='{'),
+    Token(loc=L, type='identifier', text='if'),
+    Token(loc=L, type='identifier', text='true'),
+    Token(loc=L, type='identifier', text='then'),
+    Token(loc=L, type='punctuation', text='{'),
+    Token(loc=L, type='identifier', text='a'),
+    Token(loc=L, type='punctuation', text='}'),
+    Token(loc=L, type='identifier', text='b'),
+    Token(loc=L, type='identifier', text='c'),
+    Token(loc=L, type='punctuation', text='}'),
+  ]
+  
+  try:
+    parse(tokens)
+    assert False == True
+  except Exception as exc:
+    assert exc.args[0] == "Location(file='L', line=-1, column=-1): expected one of: ';', '}' got 'c'"
+    
+  tokens = [
+    Token(loc=L, type='punctuation', text='{'),
+    Token(loc=L, type='identifier', text='if'),
+    Token(loc=L, type='identifier', text='true'),
+    Token(loc=L, type='identifier', text='then'),
+    Token(loc=L, type='punctuation', text='{'),
+    Token(loc=L, type='identifier', text='a'),
+    Token(loc=L, type='punctuation', text='}'),
+    Token(loc=L, type='identifier', text='else'),
+    Token(loc=L, type='punctuation', text='{'),
+    Token(loc=L, type='identifier', text='b'),
+    Token(loc=L, type='punctuation', text='}'),
+    Token(loc=L, type='identifier', text='c'),
+    Token(loc=L, type='punctuation', text='}'),
+  ]
+  
+  assert parse(tokens) == ast.Block(
+    [
+      ast.Condition(
+        ast.Literal(True),
+        ast.Block(
+          [ast.Identifier('a')], ast.Identifier('a')
+        ), 
+        ast.Block(
+          [ast.Identifier('b')], ast.Identifier('b')
+        )
+      ),
+      ast.Identifier('c')
+      ], ast.Identifier('c')
+  )
+  
+def test_function_call_in_block() -> None:
+  tokens = [
+    Token(loc=L, type='punctuation', text='{'),
+    Token(loc=L, type='identifier', text='f'),
+    Token(loc=L, type='punctuation', text='('),
+    Token(loc=L, type='identifier', text='a'),
+    Token(loc=L, type='punctuation', text=')'),
+    Token(loc=L, type='punctuation', text='}'),
+  ]
+  
+  assert parse(tokens) == ast.Block(
+    [ast.FunctionCall(ast.Identifier('f'), [ast.Identifier('a')])],
+    ast.FunctionCall(ast.Identifier('f'), [ast.Identifier('a')])
+  )
+  
+  tokens = [
+    Token(loc=L, type='identifier', text='x'),
+    Token(loc=L, type='operator', text='='),
+    Token(loc=L, type='punctuation', text='{'),
+    Token(loc=L, type='identifier', text='f'),
+    Token(loc=L, type='punctuation', text='('),
+    Token(loc=L, type='identifier', text='a'),
+    Token(loc=L, type='punctuation', text=')'),
+    Token(loc=L, type='punctuation', text='}'),
+  ]
+  
+  assert parse(tokens) == ast.BinaryOp(
+    ast.Identifier('x'),
+    '=',
+    ast.Block(
+      [ast.FunctionCall(ast.Identifier('f'), [ast.Identifier('a')])],
+      ast.FunctionCall(ast.Identifier('f'), [ast.Identifier('a')])
+    )
+  )
+
+
+def test_blocks_with_function_calls() -> None:
+  tokens = [
+    Token(loc=L, type='identifier', text='x'),
+    Token(loc=L, type='operator', text='='),
+    Token(loc=L, type='punctuation', text='{'),
+    Token(loc=L, type='punctuation', text='{'),
+    Token(loc=L, type='identifier', text='f'),
+    Token(loc=L, type='punctuation', text='('),
+    Token(loc=L, type='identifier', text='a'),
+    Token(loc=L, type='punctuation', text=')'),
+    Token(loc=L, type='punctuation', text='}'),
+    Token(loc=L, type='punctuation', text='{'),
+    Token(loc=L, type='identifier', text='b'),
+    Token(loc=L, type='punctuation', text='}'),
+    Token(loc=L, type='punctuation', text='}'),
+  ]
+
+  assert parse(tokens) == ast.BinaryOp(
+    ast.Identifier('x'),
+    '=',
+    ast.Block(
+      content = [
+        ast.Block([ast.FunctionCall(ast.Identifier('f'), [ast.Identifier('a')])],
+                  val = ast.FunctionCall(ast.Identifier('f'), [ast.Identifier('a')])),
+        ast.Block([ast.Identifier('b')], ast.Identifier('b'))
+      ],
+      val = ast.Block([ast.Identifier('b')], ast.Identifier('b'))
+    )
   )

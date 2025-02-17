@@ -6,7 +6,7 @@ class Expression:
   
 @dataclass
 class Literal(Expression):
-  value: int | bool
+  value: int | bool | None
   
 @dataclass
 class Identifier(Expression):
@@ -25,7 +25,7 @@ class Condition(Expression):
   el: Expression | None = None
   
 @dataclass
-class Function(Expression):
+class FunctionCall(Expression):
   name: Expression
   params: list[Expression]
   
@@ -35,6 +35,6 @@ class Unary(Expression):
   val: Expression
   
 @dataclass
-class Assignment(Expression):
-  name: Expression
+class Block(Expression):
+  content: list[Expression]
   val: Expression

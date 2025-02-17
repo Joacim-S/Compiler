@@ -20,7 +20,6 @@ def parse(tokens: list[Token]) -> ast.Expression:
     '='
   ]
 
-
   def peek() -> Token:
     if len(tokens) == 0:
       raise Exception('Tokens empty, nothing to parse')
@@ -38,10 +37,10 @@ def parse(tokens: list[Token]) -> ast.Expression:
     nonlocal pos
     token = peek()
     if isinstance(expected, str) and token.text != expected:
-      raise Exception(f'{token.loc}: expected "{expected}" got "{token.text}"')
+      raise Exception(f"{token.loc}: expected '{expected}' got '{token.text}'")
     if isinstance(expected, list) and token.text not in expected:
-      comma_separated = ", ".join([f'"{e}"' for e in expected])
-      raise Exception(f'{token.loc}: expected one of: {comma_separated} got "{token.text}"')
+      comma_separated = ", ".join([f"'{e}'" for e in expected])
+      raise Exception(f"{token.loc}: expected one of: {comma_separated} got '{token.text}'")
     pos += 1
     return token
 
@@ -53,6 +52,9 @@ def parse(tokens: list[Token]) -> ast.Expression:
     }
     if peek().text == '(':
       return parse_parenthesized()
+    
+    if peek().text == '{':
+      return parse_block()
     
     if peek().text == 'if':
       return parse_condition()
@@ -67,6 +69,14 @@ def parse(tokens: list[Token]) -> ast.Expression:
       expr = parse_expression()
       return ast.Unary(op, expr)
     
+    if peek().text == 'true':
+      consume('true')
+      return ast.Literal(True)
+    
+    if peek().text == 'false':
+      consume('false')
+      return ast.Literal(False)
+
     if peek().type == 'identifier':
       token = consume()
       if peek().text == '(':
@@ -84,7 +94,11 @@ def parse(tokens: list[Token]) -> ast.Expression:
     while get_precedence(peek().text) == level:
       operator_token = consume()
       operator = operator_token.text
-      right = parse_expression(level+1)
+
+      if operator in right_associative_operators:
+        right = parse_expression()
+      else:
+        right = parse_expression(level+1)
 
       left = ast.BinaryOp(
         left,
@@ -93,6 +107,34 @@ def parse(tokens: list[Token]) -> ast.Expression:
       )
 
     return left
+  
+  def parse_block() -> ast.Expression:
+    nonlocal pos
+    consume('{')
+    content = []
+    val: ast.Expression = ast.Literal(None)
+
+    while peek().text != '}':
+      expr = parse_expression()
+      content.append(expr)
+
+      if peek().text == '}':
+        consume('}')
+        val = expr
+        return ast.Block(content, val)
+      
+      elif peek().text == ';':
+        consume(';')
+        val = ast.Literal(None)
+        
+      elif tokens[pos-1].text != '}':
+        consume([';', '}'])
+
+    consume('}')
+    if peek().text == ';':
+      consume(';')
+    
+    return ast.Block(content, val)
   
   def parse_parenthesized() -> ast.Expression:
     consume('(')
@@ -114,7 +156,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
       then,
       el
     )
-    
+
   def parse_function_call(name: ast.Expression) -> ast.Expression:
     consume('(')
     params: list[ast.Expression] = []
@@ -126,7 +168,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
         params.append(parse_expression())
 
     consume(')')
-    return ast.Function(name, params)
+    return ast.FunctionCall(name, params)
   
   def get_precedence(text: str) -> int:
     for i in range(len(precedence)):
