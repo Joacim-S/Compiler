@@ -1,5 +1,5 @@
-import re
 from dataclasses import dataclass
+import re
 
 @dataclass
 class Location:
@@ -9,23 +9,16 @@ class Location:
   def __eq__(self, other: object) -> bool:
     if not isinstance(other, Location):
       return NotImplemented
-    return self.file == 'L' or other.file == 'L'
+    return self.file == 'L' and self.line == -1 and self.column == -1 or (
+    other.file == 'L' and other.line == -1 and other.column == -1) or (
+      self.file == other.file and self.line == other.line and self.column == other.column
+    )
 
 @dataclass
 class Token:
   text: str
   type: str
   loc: Location
-
-def checkMatch(match: re.Match | None, type: str, tokens: list[Token], i: int, error: bool) -> tuple[list, int, bool]:
-  if not match:
-    return (tokens, i, error)
-  i = match.end()
-  error = False
-  if type == 'whitespace' or type == 'comment':
-    return (tokens, i, error)
-  tokens.append(Token(match[0], type, Location('0', 0, 0)))
-  return (tokens, i, error)
 
 def tokenize(source_code: str) -> list[Token]:
   re_identifier = re.compile(r'[a-zA-Z_][0-9a-zA-Z_]*')
@@ -35,43 +28,73 @@ def tokenize(source_code: str) -> list[Token]:
   re_punctuation = re.compile(r'\(|\)|\{|\}|,|;')
   re_comment = re.compile(r'(//|#).*|/\*(\n|.)*?\*/')
   
-  error = True
+
   i = 0
   tokens: list[Token] = []
+  line = 1
+  col = 1
   
   def checkMatch(type: str) -> None:
     nonlocal i
-    nonlocal error
     nonlocal tokens
+    nonlocal line
+    nonlocal col
 
     if not match:
       return
 
     i = match.end()
-    error = False
+    
+    match_lines = 0
+    match_cols = 0
+    
+    for char in match.group():
+      if char == '\n':
+        match_lines += 1
+        match_cols = 0
+        col = 1
+      else:
+        match_cols += 1
 
     if type == 'whitespace' or type == 'comment':
+      line += match_lines
+      col += match_cols
       return
 
-    tokens.append(Token(match[0], type, Location('0', 0, 0)))
+    tokens.append(Token(match[0], type, Location('file', line, col)))
+    line += match_lines
+    col += match_cols
     return
 
   while i < len(source_code):
-    error = True
     
     match = re_comment.match(source_code, i)
-    checkMatch('comment')
+    if match:
+      checkMatch('comment')
+      continue
     match = re_whitespace.match(source_code, i)
-    checkMatch('whitespace')
+    if match:
+      checkMatch('whitespace')
+      continue
     match = re_int_lit.match(source_code, i)
-    checkMatch('int_literal')
+    if match:
+      checkMatch('int_literal')
+      continue
     match = re_identifier.match(source_code, i)
-    checkMatch('identifier')
+    if match:
+      checkMatch('identifier')
+      continue
     match = re_operator.match(source_code, i)
-    checkMatch('operator')
+    if match:
+      checkMatch('operator')
+      continue
     match = re_punctuation.match(source_code, i)
-    checkMatch('punctuation')
-    if error:
-      raise Exception(f'Syntax Error, tokens:{tokens}')
+    if match:
+      checkMatch('punctuation')
+      continue
+
+    raise Exception(f'Syntax Error, tokens:{tokens}')
 
   return tokens
+
+print(tokenize('a + b-c   +   1234'))
