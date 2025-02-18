@@ -96,7 +96,10 @@ def parse(tokens: list[Token]) -> ast.Expression:
           )
       
       return parse_declaration()
-
+    
+    if peek().text == 'while':
+      return parse_loop()
+      
     if peek().type == 'identifier':
       token = consume()
       if peek().text == '(':
@@ -128,6 +131,13 @@ def parse(tokens: list[Token]) -> ast.Expression:
       )
 
     return left
+  
+  def parse_loop() -> ast.Expression:
+    start_token = consume('while')
+    condition = parse_expression()
+    consume('do')
+    do = parse_expression()
+    return ast.Loop(start_token.loc, condition, do)
   
   def parse_declaration() -> ast.Expression:
     consume('var')

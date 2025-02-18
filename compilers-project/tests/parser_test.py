@@ -535,3 +535,34 @@ def test_declaration() -> None:
     ast.Identifier(L,'x'),
     ast.Literal(L,123)
   )
+  
+def test_loop() -> None:
+  tokens = [
+    Token(loc=L, type='identifier', text='while'),
+    Token(loc=L, type='identifier', text='i'),
+    Token(loc=L, type='operator', text='<'),
+    Token(loc=L, type='int_literal', text='100'),
+    Token(loc=L, type='identifier', text='do'),
+    Token(loc=L, type='identifier', text='i'),
+    Token(loc=L, type='operator', text='='),
+    Token(loc=L, type='identifier', text='i'),
+    Token(loc=L, type='operator', text='+'),
+    Token(loc=L, type='int_literal', text='1'),
+  ]
+  
+  assert(parse(tokens)) == ast.Loop(L,
+    ast.BinaryOp(
+      L,
+      ast.Identifier(L, 'i'),
+      '<',
+      ast.Literal(L, 100)),
+    ast.BinaryOp(
+      L,
+      ast.Identifier(L, 'i'),
+      '=',
+      ast.BinaryOp(
+        L,
+        ast.Identifier(L, 'i'),
+        '+',
+        ast.Literal(L, 1)))
+  )

@@ -45,3 +45,8 @@ class Block(Expression):
 class Declaration(Expression):
   name: Identifier
   val: Expression
+  
+@dataclass
+class Loop(Expression):
+  condition: Expression
+  do: Expression
