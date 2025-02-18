@@ -35,24 +35,42 @@ def tokenize(source_code: str) -> list[Token]:
   re_punctuation = re.compile(r'\(|\)|\{|\}|,|;')
   re_comment = re.compile(r'(//|#).*|/\*(\n|.)*?\*/')
   
+  error = True
   i = 0
   tokens: list[Token] = []
+  
+  def checkMatch(type: str) -> None:
+    nonlocal i
+    nonlocal error
+    nonlocal tokens
+
+    if not match:
+      return
+
+    i = match.end()
+    error = False
+
+    if type == 'whitespace' or type == 'comment':
+      return
+
+    tokens.append(Token(match[0], type, Location('0', 0, 0)))
+    return
 
   while i < len(source_code):
     error = True
     
     match = re_comment.match(source_code, i)
-    tokens, i, error = checkMatch(match, 'comment', tokens, i, error)
+    checkMatch('comment')
     match = re_whitespace.match(source_code, i)
-    tokens, i, error = checkMatch(match, 'whitespace', tokens, i, error)
+    checkMatch('whitespace')
     match = re_int_lit.match(source_code, i)
-    tokens, i, error = checkMatch(match, 'int_literal', tokens, i, error)
+    checkMatch('int_literal')
     match = re_identifier.match(source_code, i)
-    tokens, i, error = checkMatch(match, 'identifier', tokens, i, error)
+    checkMatch('identifier')
     match = re_operator.match(source_code, i)
-    tokens, i, error = checkMatch(match, 'operator', tokens, i, error)
+    checkMatch('operator')
     match = re_punctuation.match(source_code, i)
-    tokens, i, error = checkMatch(match, 'punctuation', tokens, i, error)
+    checkMatch('punctuation')
     if error:
       raise Exception(f'Syntax Error, tokens:{tokens}')
 

@@ -5,7 +5,7 @@ import compiler.ast as ast
 L = Location('L',-1, -1)
 
 def test_single_character() -> None:
-  assert parse([Token(loc=L, type='identifier', text='a')]) == ast.Identifier('a')
+  assert parse([Token(loc=L, type='identifier', text='a')]) == ast.Identifier(L, 'a')
 
 def test_one_plus_two_works() -> None:
   tokens = [
@@ -14,9 +14,10 @@ def test_one_plus_two_works() -> None:
     Token(loc=L, type='int_literal', text='2')
   ]
   assert parse(tokens) == ast.BinaryOp(
-      ast.Literal(1),
+    L,
+      ast.Literal(L, 1),
       '+',
-      ast.Literal(2)
+      ast.Literal(L, 2)
     )
 
 def test_a_plus_two_works() -> None:
@@ -25,10 +26,10 @@ def test_a_plus_two_works() -> None:
     Token(loc=L, type='operator', text='+'),
     Token(loc=L, type='int_literal', text='2')
   ]
-  assert parse(tokens) == ast.BinaryOp(
-      ast.Identifier('a'),
+  assert parse(tokens) == ast.BinaryOp(L,
+      ast.Identifier(L, 'a'),
       '+',
-      ast.Literal(2)
+      ast.Literal(L, 2)
     )
   
 def test_addition_multiplication_presedence() -> None:
@@ -39,13 +40,13 @@ def test_addition_multiplication_presedence() -> None:
     Token(loc=L, type='int_literal', text='*'),
     Token(loc=L, type='int_literal', text='3'),
   ]
-  assert parse(tokens) == ast.BinaryOp(
-    left = ast.Literal(1),
+  assert parse(tokens) == ast.BinaryOp(L,
+    left = ast.Literal(L, 1),
     op = '+',
-    right = ast.BinaryOp(
-      ast.Literal(2),
+    right = ast.BinaryOp(L,
+      ast.Literal(L,2),
       '*',
-      ast.Literal(3)
+      ast.Literal(L,3)
     )
   )
   
@@ -56,13 +57,13 @@ def test_addition_multiplication_presedence() -> None:
     Token(loc=L, type='int_literal', text='+'),
     Token(loc=L, type='int_literal', text='3'),
   ]
-  assert parse(tokens) == ast.BinaryOp(
-    right = ast.Literal(3),
+  assert parse(tokens) == ast.BinaryOp(L,
+    right = ast.Literal(L,3),
     op = '+',
-    left = ast.BinaryOp(
-      ast.Literal(1),
+    left = ast.BinaryOp(L,
+      ast.Literal(L,1),
       '*',
-      ast.Literal(2)
+      ast.Literal(L,2)
     )
   )
   
@@ -89,14 +90,14 @@ def test_paranthesis() -> None:
     Token(loc=L, type='int_literal', text='*'),
     Token(loc=L, type='int_literal', text='3'),
   ]
-  assert parse(tokens) == ast.BinaryOp(
-    left = ast.BinaryOp(
-      ast.Literal(1),
+  assert parse(tokens) == ast.BinaryOp(L,
+    left = ast.BinaryOp(L,
+      ast.Literal(L,1),
       '+',
-      ast.Literal(2)
+      ast.Literal(L,2)
     ),
     op = '*',
-    right = ast.Literal(3)
+    right = ast.Literal(L,3)
     )
 
 def test_if() -> None:
@@ -106,9 +107,9 @@ def test_if() -> None:
     Token(loc=L, type='identifier', text='then'),
     Token(loc=L, type='identifier', text='b'),
   ]
-  assert parse(tokens) == ast.Condition(
-    ast.Identifier('a'),
-    ast.Identifier('b'),
+  assert parse(tokens) == ast.Condition(L,
+    ast.Identifier(L,'a'),
+    ast.Identifier(L,'b'),
     None
   )
 
@@ -127,14 +128,14 @@ def test_nested_if() -> None:
     Token(loc=L, type='identifier', text='else'),
     Token(loc=L, type='identifier', text='d'),
   ]
-  assert parse(tokens) == ast.Condition(
-    ast.Identifier('a'),
-    ast.Condition(
-      ast.Identifier('x'),
-      ast.Identifier('b'),
-      ast.Identifier('c')
+  assert parse(tokens) == ast.Condition(L,
+    ast.Identifier(L,'a'),
+    ast.Condition(L,
+      ast.Identifier(L,'x'),
+      ast.Identifier(L,'b'),
+      ast.Identifier(L,'c')
     ),
-    ast.Identifier('d')
+    ast.Identifier(L,'d')
   )
 
 def test_if_as_part_of_expression() -> None:
@@ -149,13 +150,13 @@ def test_if_as_part_of_expression() -> None:
     Token(loc=L, type='int_literal', text='3'),
   ]
   
-  assert parse(tokens) == ast.BinaryOp(
-    left = ast.Literal(1),
+  assert parse(tokens) == ast.BinaryOp(L,
+    left = ast.Literal(L,1),
     op = '+',
-    right = ast.Condition(
-      ast.Identifier('True'),
-      ast.Literal(2),
-      ast.Literal(3)
+    right = ast.Condition(L,
+      ast.Identifier(L,'True'),
+      ast.Literal(L,2),
+      ast.Literal(L,3)
     ),
   )
   
@@ -165,8 +166,8 @@ def test_function_call_no_params() -> None:
     Token(loc=L, type='punctuation', text='('),
     Token(loc=L, type='punctuation', text=')'),
   ]
-  assert parse(tokens) == ast.FunctionCall(
-    ast.Identifier('f'), [])
+  assert parse(tokens) == ast.FunctionCall(L,
+    ast.Identifier(L,'f'), [])
   
 def test_function_call_single_params() -> None:
   tokens = [
@@ -177,10 +178,10 @@ def test_function_call_single_params() -> None:
     Token(loc=L, type='identifier', text='a'),
     Token(loc=L, type='punctuation', text=')'),
   ]
-  assert parse(tokens) == ast.FunctionCall(
-    ast.Identifier('f'), [
-      ast.Literal(2),
-      ast.Identifier('a'),
+  assert parse(tokens) == ast.FunctionCall(L,
+    ast.Identifier(L,'f'), [
+      ast.Literal(L,2),
+      ast.Identifier(L,'a'),
     ])
 
 def test_unary() -> None:
@@ -188,9 +189,9 @@ def test_unary() -> None:
     Token(loc=L, type='identifier', text='not'),
     Token(loc=L, type='identifier', text='a'),
   ]
-  assert parse(tokens) == ast.Unary(
+  assert parse(tokens) == ast.Unary(L,
     'not',
-    ast.Identifier('a')
+    ast.Identifier(L,'a')
   )
   
 def test_unary_chain() -> None:
@@ -201,15 +202,15 @@ def test_unary_chain() -> None:
     Token(loc=L, type='operator', text='-'),
     Token(loc=L, type='identifier', text='a'),
   ]
-  assert parse(tokens) == ast.Unary(
+  assert parse(tokens) == ast.Unary(L,
     'not',
-    ast.Unary(
+    ast.Unary(L,
       'not',
-      ast.Unary(
+      ast.Unary(L,
         'not',
-        ast.Unary(
+        ast.Unary(L,
           '-',
-          ast.Identifier('a')
+          ast.Identifier(L,'a')
         )
       )
     )
@@ -226,13 +227,13 @@ def test_comparison() -> None:
     Token(loc=L, type='identifier', text='b')
   ]
   
-  assert parse(tokens) == ast.Condition(
-    ast.BinaryOp(
-      ast.Literal(2),
+  assert parse(tokens) == ast.Condition(L,
+    ast.BinaryOp(L,
+      ast.Literal(L,2),
       '==',
-      ast.Identifier('a')
+      ast.Identifier(L,'a')
     ),
-    ast.Identifier('b')
+    ast.Identifier(L,'b')
   )
   
 def test_assignment() -> None:
@@ -242,10 +243,10 @@ def test_assignment() -> None:
     Token(loc=L, type='identifier', text='b'),
   ]
   
-  assert parse(tokens) == ast.BinaryOp(
-    ast.Identifier('a'),
+  assert parse(tokens) == ast.BinaryOp(L,
+    ast.Identifier(L,'a'),
     '=',
-    ast.Identifier('b')
+    ast.Identifier(L,'b')
   )
   
   tokens = [
@@ -256,13 +257,13 @@ def test_assignment() -> None:
     Token(loc=L, type='identifier', text='c'),
   ]
   
-  assert parse(tokens) == ast.BinaryOp(
-    ast.Identifier('a'),
+  assert parse(tokens) == ast.BinaryOp(L,
+    ast.Identifier(L,'a'),
     '=',
-    ast.BinaryOp(
-      ast.Identifier('b'),
+    ast.BinaryOp(L,
+      ast.Identifier(L,'b'),
       '=',
-      ast.Identifier('c')
+      ast.Identifier(L,'c')
     )
   )
 
@@ -275,14 +276,14 @@ def test_ors_ands() -> None:
     Token(loc=L, type='identifier', text='c'),
   ]
   
-  assert parse(tokens) == ast.BinaryOp(
-    ast.BinaryOp(
-      ast.Identifier('a'),
+  assert parse(tokens) == ast.BinaryOp(L,
+    ast.BinaryOp(L,
+      ast.Identifier(L,'a'),
       'or',
-      ast.Identifier('b')
+      ast.Identifier(L,'b')
     ),
     'or',
-    ast.Identifier('c')
+    ast.Identifier(L,'c')
   )
 
 def test_complicated_assignments() -> None:
@@ -300,23 +301,23 @@ def test_complicated_assignments() -> None:
     Token(loc=L, type='int_literal', text='5'),
   ]
   
-  assert parse(tokens) == ast.BinaryOp(
-    ast.Identifier('a'),
+  assert parse(tokens) == ast.BinaryOp(L,
+    ast.Identifier(L,'a'),
     '=',
-    ast.BinaryOp(
-      ast.BinaryOp(
-        ast.Identifier('b'),
+    ast.BinaryOp(L,
+      ast.BinaryOp(L,
+        ast.Identifier(L,'b'),
         '+',
-        ast.Literal(2)
+        ast.Literal(L,2)
       ),
       '=',
-      ast.BinaryOp(
-        ast.Identifier('c'),
+      ast.BinaryOp(L,
+        ast.Identifier(L,'c'),
         '=',
-        ast.BinaryOp(
-          ast.Identifier('d'),
+        ast.BinaryOp(L,
+          ast.Identifier(L,'d'),
           '+',
-          ast.Literal(5)
+          ast.Literal(L,5)
         )
       )
     )
@@ -334,15 +335,15 @@ def test_blocks() -> None:
     Token(loc=L, type='identifier', text='}'),
   ]
 
-  assert parse(tokens) == ast.Block(
+  assert parse(tokens) == ast.Block(L,
     [
-      ast.Block([ast.Identifier('a')],
-                ast.Identifier('a')),
-      ast.Block([ast.Identifier('b')],
-      ast.Identifier('b'))
+      ast.Block(L,[ast.Identifier(L,'a')],
+                ast.Identifier(L,'a')),
+      ast.Block(L,[ast.Identifier(L,'b')],
+      ast.Identifier(L,'b'))
       ],
-    ast.Block([ast.Identifier('b')],
-              ast.Identifier('b')))
+    ast.Block(L,[ast.Identifier(L,'b')],
+              ast.Identifier(L,'b')))
 
   tokens = [
     Token(loc=L, type='punctuation', text='{'),
@@ -369,16 +370,16 @@ def test_blocks() -> None:
     Token(loc=L, type='punctuation', text='}'),
   ]
   
-  assert parse(tokens) == ast.Block(
+  assert parse(tokens) == ast.Block(L,
     [
-      ast.Condition(
-        ast.Literal(True),
-        ast.Block(
-          [ast.Identifier('a')], ast.Identifier('a')
+      ast.Condition(L,
+        ast.Literal(L,True),
+        ast.Block(L,
+          [ast.Identifier(L,'a')], ast.Identifier(L,'a')
         )
       ),
-      ast.Identifier('b')
-      ], ast.Identifier('b')
+      ast.Identifier(L,'b')
+      ], ast.Identifier(L,'b')
   )
   
   tokens = [
@@ -394,16 +395,16 @@ def test_blocks() -> None:
     Token(loc=L, type='identifier', text='}'),
   ]
   
-  assert parse(tokens) == ast.Block(
+  assert parse(tokens) == ast.Block(L,
     [
-      ast.Condition(
-        ast.Literal(True),
-        ast.Block(
-          [ast.Identifier('a')], ast.Identifier('a')
+      ast.Condition(L,
+        ast.Literal(L,True),
+        ast.Block(L,
+          [ast.Identifier(L,'a')], ast.Identifier(L,'a')
         )
       ),
-      ast.Identifier('b')
-      ], ast.Identifier('b')
+      ast.Identifier(L,'b')
+      ], ast.Identifier(L,'b')
   )
   
   tokens = [
@@ -441,19 +442,19 @@ def test_blocks() -> None:
     Token(loc=L, type='punctuation', text='}'),
   ]
   
-  assert parse(tokens) == ast.Block(
+  assert parse(tokens) == ast.Block(L,
     [
-      ast.Condition(
-        ast.Literal(True),
-        ast.Block(
-          [ast.Identifier('a')], ast.Identifier('a')
+      ast.Condition(L,
+        ast.Literal(L,True),
+        ast.Block(L,
+          [ast.Identifier(L,'a')], ast.Identifier(L,'a')
         ), 
-        ast.Block(
-          [ast.Identifier('b')], ast.Identifier('b')
+        ast.Block(L,
+          [ast.Identifier(L,'b')], ast.Identifier(L,'b')
         )
       ),
-      ast.Identifier('c')
-      ], ast.Identifier('c')
+      ast.Identifier(L,'c')
+      ], ast.Identifier(L,'c')
   )
   
 def test_function_call_in_block() -> None:
@@ -466,9 +467,9 @@ def test_function_call_in_block() -> None:
     Token(loc=L, type='punctuation', text='}'),
   ]
   
-  assert parse(tokens) == ast.Block(
-    [ast.FunctionCall(ast.Identifier('f'), [ast.Identifier('a')])],
-    ast.FunctionCall(ast.Identifier('f'), [ast.Identifier('a')])
+  assert parse(tokens) == ast.Block(L,
+    [ast.FunctionCall(L,ast.Identifier(L,'f'), [ast.Identifier(L,'a')])],
+    ast.FunctionCall(L,ast.Identifier(L,'f'), [ast.Identifier(L,'a')])
   )
   
   tokens = [
@@ -482,12 +483,12 @@ def test_function_call_in_block() -> None:
     Token(loc=L, type='punctuation', text='}'),
   ]
   
-  assert parse(tokens) == ast.BinaryOp(
-    ast.Identifier('x'),
+  assert parse(tokens) == ast.BinaryOp(L,
+    ast.Identifier(L,'x'),
     '=',
-    ast.Block(
-      [ast.FunctionCall(ast.Identifier('f'), [ast.Identifier('a')])],
-      ast.FunctionCall(ast.Identifier('f'), [ast.Identifier('a')])
+    ast.Block(L,
+      [ast.FunctionCall(L,ast.Identifier(L,'f'), [ast.Identifier(L,'a')])],
+      ast.FunctionCall(L,ast.Identifier(L,'f'), [ast.Identifier(L,'a')])
     )
   )
 
@@ -509,15 +510,28 @@ def test_blocks_with_function_calls() -> None:
     Token(loc=L, type='punctuation', text='}'),
   ]
 
-  assert parse(tokens) == ast.BinaryOp(
-    ast.Identifier('x'),
+  assert parse(tokens) == ast.BinaryOp(L,
+    ast.Identifier(L,'x'),
     '=',
-    ast.Block(
+    ast.Block(L,
       content = [
-        ast.Block([ast.FunctionCall(ast.Identifier('f'), [ast.Identifier('a')])],
-                  val = ast.FunctionCall(ast.Identifier('f'), [ast.Identifier('a')])),
-        ast.Block([ast.Identifier('b')], ast.Identifier('b'))
+        ast.Block(L,[ast.FunctionCall(L,ast.Identifier(L,'f'), [ast.Identifier(L,'a')])],
+                  val = ast.FunctionCall(L,ast.Identifier(L,'f'), [ast.Identifier(L,'a')])),
+        ast.Block(L,[ast.Identifier(L,'b')], ast.Identifier(L,'b'))
       ],
-      val = ast.Block([ast.Identifier('b')], ast.Identifier('b'))
+      val = ast.Block(L,[ast.Identifier(L,'b')], ast.Identifier(L,'b'))
     )
+  )
+
+def test_declaration() -> None:
+  tokens = [
+    Token(loc=L, type='identifier', text='var'),
+    Token(loc=L, type='identifier', text='x'),
+    Token(loc=L, type='operator', text='='),
+    Token(loc=L, type='int_literal', text='123'),
+  ]
+  
+  assert parse(tokens) == ast.Declaration(L,
+    ast.Identifier(L,'x'),
+    ast.Literal(L,123)
   )

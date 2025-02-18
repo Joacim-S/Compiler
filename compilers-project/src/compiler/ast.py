@@ -1,13 +1,15 @@
 from dataclasses import dataclass
+from compiler.tokenizer import Location
 
 @dataclass
 class Expression:
   '''Base class for AST nodes'''
+  location: Location
   
 @dataclass
 class Literal(Expression):
   value: int | bool | None
-  
+
 @dataclass
 class Identifier(Expression):
   name: str
@@ -37,4 +39,9 @@ class Unary(Expression):
 @dataclass
 class Block(Expression):
   content: list[Expression]
+  val: Expression
+  
+@dataclass
+class Declaration(Expression):
+  name: Identifier
   val: Expression
