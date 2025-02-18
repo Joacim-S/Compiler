@@ -96,5 +96,3 @@ def tokenize(source_code: str) -> list[Token]:
     raise Exception(f'Syntax Error, tokens:{tokens}')
 
   return tokens
-
-print(tokenize('a + b-c   +   1234'))
