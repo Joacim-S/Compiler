@@ -189,10 +189,11 @@ def parse(tokens: list[Token]) -> ast.Expression:
     con = parse_expression()
     consume('then')
     then = parse_expression()
-    el = None
     if peek().text == 'else':
       consume()
       el = parse_expression()
+    else:
+      el = ast.Literal(then.location, None)
     return ast.Condition(
       start_token.loc,
       con,
@@ -221,8 +222,27 @@ def parse(tokens: list[Token]) -> ast.Expression:
     return len(precedence)
   
   parsed = parse_expression()
+  content = [parsed]
+  val: ast.Literal | ast.Expression = ast.Literal(parsed.location, None)
+
   if peek().type != 'end':
-    raise Exception(f"Unexpected token '{peek().text}' at {peek().loc}")
+    while peek().text == ';':
+      consume(';')
+      if peek().type != 'end':
+        expr = parse_expression()
+        content.append(expr)
+
+    if peek().type != 'end':
+      if peek_back().text != ';':
+        raise Exception (f"Unexpected token '{peek().text}' at {peek().loc}")
+      expr = parse_expression()
+      content.append(expr)
+      val = expr
+    
+    parsed = ast.Block(parsed.location, content, val)
+    
+    if peek().type != 'end':
+      raise Exception(f"Unexpected token '{peek().text}' at {peek().loc}")
     
   
   return parsed

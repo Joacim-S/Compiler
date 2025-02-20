@@ -24,7 +24,7 @@ class BinaryOp(Expression):
 class Condition(Expression):
   con: Expression
   then: Expression
-  el: Expression | None = None
+  el: Expression | Literal
   
 @dataclass
 class FunctionCall(Expression):

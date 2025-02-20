@@ -110,7 +110,7 @@ def test_if() -> None:
   assert parse(tokens) == ast.Condition(L,
     ast.Identifier(L,'a'),
     ast.Identifier(L,'b'),
-    None
+    ast.Literal(L, None)
   )
 
   
@@ -233,7 +233,8 @@ def test_comparison() -> None:
       '==',
       ast.Identifier(L,'a')
     ),
-    ast.Identifier(L,'b')
+    ast.Identifier(L,'b'),
+    ast.Literal(L, None)
   )
   
 def test_assignment() -> None:
@@ -376,7 +377,8 @@ def test_blocks() -> None:
         ast.Literal(L,True),
         ast.Block(L,
           [ast.Identifier(L,'a')], ast.Identifier(L,'a')
-        )
+        ),
+        ast.Literal(L, None)
       ),
       ast.Identifier(L,'b')
       ], ast.Identifier(L,'b')
@@ -401,7 +403,8 @@ def test_blocks() -> None:
         ast.Literal(L,True),
         ast.Block(L,
           [ast.Identifier(L,'a')], ast.Identifier(L,'a')
-        )
+        ),
+        ast.Literal(L, None)
       ),
       ast.Identifier(L,'b')
       ], ast.Identifier(L,'b')
@@ -565,4 +568,31 @@ def test_loop() -> None:
         ast.Identifier(L, 'i'),
         '+',
         ast.Literal(L, 1)))
+  )
+  
+def test_multiplse_expressions() -> None:
+  tokens = [
+    Token(loc=L, type='identifier', text='var'),
+    Token(loc=L, type='identifier', text='x'),
+    Token(loc=L, type='operator', text='='),
+    Token(loc=L, type='int_literal', text='123'),
+    Token(loc=L, type='punctuation', text=';'),
+    Token(loc=L, type='identifier', text='var'),
+    Token(loc=L, type='identifier', text='y'),
+    Token(loc=L, type='operator', text='='),
+    Token(loc=L, type='int_literal', text='10'),
+  ]
+  
+  assert parse(tokens) == ast.Block(
+    L, [ast.Declaration(
+      L,
+      ast.Identifier(L,'x'),
+      ast.Literal(L,123),
+    ),
+  ast.Declaration(
+    L,
+    ast.Identifier(L,'y'),
+    ast.Literal(L,10)
+  )
+  ], ast.Literal(L, None)
   )
