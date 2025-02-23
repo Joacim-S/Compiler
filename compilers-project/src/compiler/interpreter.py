@@ -1,8 +1,8 @@
-from typing import Any
+from typing import Any, Callable
 from compiler import ast
 from compiler.symtab import SymTab
 
-type Value = int | bool | None
+type Value = int | bool | None | Callable
 
 def interperet(node: ast.Expression, symtab: SymTab) -> Value:
   match node:
@@ -10,9 +10,28 @@ def interperet(node: ast.Expression, symtab: SymTab) -> Value:
       return node.value
     
     case ast.BinaryOp():
-      a: Any = interperet(node.left, symtab)
-      b: Any = interperet(node.right,symtab)
       tab = symtab
+
+      if node.op == '=':
+        identifier: Any = node.left
+
+        while identifier.name not in tab.locals.keys():
+          if tab.parent:
+            tab = tab.parent
+          else:
+            raise Exception(f'Cannot assign value to undeclared variable {identifier.name}')
+
+        tab.locals[identifier.name] = interperet(node.right, symtab)
+        return tab.locals[identifier.name]
+
+      a: Any = interperet(node.left, symtab)
+      if node.op == 'or' and a:
+        return True
+
+      if node.op == 'and' and not a:
+        return False
+      
+      b: Any = interperet(node.right,symtab)
       while node.op not in tab.locals.keys():
         if tab.parent:
           tab = tab.parent
@@ -44,6 +63,23 @@ def interperet(node: ast.Expression, symtab: SymTab) -> Value:
         else:
           raise Exception(f'{node.location}: {node.name} not defined')
       return symtab.locals[node.name]
+    
+    case ast.Unary():
+      tab = symtab
+      a = interperet(node.val, symtab)
+      while node.op not in tab.locals.keys():
+        if tab.parent:
+          tab = tab.parent
+        else:
+          raise NotImplemented
+      return tab.locals[node.op](a)
+    
+    case ast.Loop():
+      while interperet(node.condition, symtab):
+        result = interperet(node.do, symtab)
 
+      return result
+      
+      
     case _:
       raise NotImplemented

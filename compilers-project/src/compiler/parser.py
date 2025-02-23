@@ -162,7 +162,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
 
       if peek().text == '}':
         consume('}')
-        val = expr
+        val = content.pop()
         return ast.Block(start_token.loc, content, val)
       
       elif peek().text == ';':

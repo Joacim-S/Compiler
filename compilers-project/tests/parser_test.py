@@ -338,12 +338,10 @@ def test_blocks() -> None:
 
   assert parse(tokens) == ast.Block(L,
     [
-      ast.Block(L,[ast.Identifier(L,'a')],
+      ast.Block(L,[],
                 ast.Identifier(L,'a')),
-      ast.Block(L,[ast.Identifier(L,'b')],
-      ast.Identifier(L,'b'))
       ],
-    ast.Block(L,[ast.Identifier(L,'b')],
+    ast.Block(L,[],
               ast.Identifier(L,'b')))
 
   tokens = [
@@ -376,11 +374,10 @@ def test_blocks() -> None:
       ast.Condition(L,
         ast.Literal(L,True),
         ast.Block(L,
-          [ast.Identifier(L,'a')], ast.Identifier(L,'a')
+          [], ast.Identifier(L,'a')
         ),
         ast.Literal(L, None)
       ),
-      ast.Identifier(L,'b')
       ], ast.Identifier(L,'b')
   )
   
@@ -402,11 +399,10 @@ def test_blocks() -> None:
       ast.Condition(L,
         ast.Literal(L,True),
         ast.Block(L,
-          [ast.Identifier(L,'a')], ast.Identifier(L,'a')
+          [], ast.Identifier(L,'a')
         ),
         ast.Literal(L, None)
       ),
-      ast.Identifier(L,'b')
       ], ast.Identifier(L,'b')
   )
   
@@ -450,13 +446,12 @@ def test_blocks() -> None:
       ast.Condition(L,
         ast.Literal(L,True),
         ast.Block(L,
-          [ast.Identifier(L,'a')], ast.Identifier(L,'a')
+          [], ast.Identifier(L,'a')
         ), 
         ast.Block(L,
-          [ast.Identifier(L,'b')], ast.Identifier(L,'b')
+          [], ast.Identifier(L,'b')
         )
       ),
-      ast.Identifier(L,'c')
       ], ast.Identifier(L,'c')
   )
   
@@ -471,7 +466,7 @@ def test_function_call_in_block() -> None:
   ]
   
   assert parse(tokens) == ast.Block(L,
-    [ast.FunctionCall(L,ast.Identifier(L,'f'), [ast.Identifier(L,'a')])],
+    [],
     ast.FunctionCall(L,ast.Identifier(L,'f'), [ast.Identifier(L,'a')])
   )
   
@@ -490,7 +485,7 @@ def test_function_call_in_block() -> None:
     ast.Identifier(L,'x'),
     '=',
     ast.Block(L,
-      [ast.FunctionCall(L,ast.Identifier(L,'f'), [ast.Identifier(L,'a')])],
+      [],
       ast.FunctionCall(L,ast.Identifier(L,'f'), [ast.Identifier(L,'a')])
     )
   )
@@ -518,11 +513,10 @@ def test_blocks_with_function_calls() -> None:
     '=',
     ast.Block(L,
       content = [
-        ast.Block(L,[ast.FunctionCall(L,ast.Identifier(L,'f'), [ast.Identifier(L,'a')])],
+        ast.Block(L,[],
                   val = ast.FunctionCall(L,ast.Identifier(L,'f'), [ast.Identifier(L,'a')])),
-        ast.Block(L,[ast.Identifier(L,'b')], ast.Identifier(L,'b'))
       ],
-      val = ast.Block(L,[ast.Identifier(L,'b')], ast.Identifier(L,'b'))
+      val = ast.Block(L,[], ast.Identifier(L,'b'))
     )
   )
 
