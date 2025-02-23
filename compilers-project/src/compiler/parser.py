@@ -13,7 +13,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
     ['<', '<=', '>', '>='],
     ['+', '-'],
     ['*', '/', '%'],
-    ['-', 'not'],
+    ['not'],
   ]
   
   right_associative_operators = [

@@ -72,7 +72,7 @@ def interperet(node: ast.Expression, symtab: SymTab) -> Value:
           tab = tab.parent
         else:
           raise NotImplemented
-      return tab.locals[node.op](a)
+      return tab.locals[f'unary_{node.op}'](a)
     
     case ast.Loop():
       while interperet(node.condition, symtab):
