@@ -201,7 +201,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
       el
     )
 
-  def parse_function_call(loc: Location, name: ast.Expression) -> ast.Expression:
+  def parse_function_call(loc: Location, name: ast.Identifier) -> ast.Expression:
     consume('(')
     params: list[ast.Expression] = []
 

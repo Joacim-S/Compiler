@@ -28,7 +28,7 @@ class Condition(Expression):
   
 @dataclass
 class FunctionCall(Expression):
-  name: Expression
+  name: Identifier
   params: list[Expression]
   
 @dataclass

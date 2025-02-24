@@ -27,4 +27,8 @@ TypeTab = SymTab({
   '<=': FunType((Int, Int), Bool),
   'or': FunType((Bool, Bool), Bool),
   'and': FunType((Bool, Bool), Bool),
+  'unary_-': FunType((Int,), Int),
+  'unary_not': FunType((Bool,), Bool),
+  'print_int': FunType((Int,), Unit),
+  'print_bool': FunType((Bool,), Unit),
 })
