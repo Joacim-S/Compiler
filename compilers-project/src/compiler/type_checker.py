@@ -59,7 +59,7 @@ def typecheck(node: ast.Expression, typetab: SymTab) -> Type:
         return typetab.locals[node.name.name]
       
       case ast.Block():
-        local_tab = SymTab({}, typetab)
+        local_tab = SymTab['str']({}, typetab)
         for expr in node.content:
           typecheck(expr, local_tab)
         

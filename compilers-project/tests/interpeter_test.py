@@ -1,6 +1,6 @@
 import compiler.ast as ast
 from compiler.interpreter import interperet
-from compiler.tokenizer import Location
+from compiler.location import Location
 from compiler.symtab import SymTab, TopTab
 
 L = Location('L',-1, -1)

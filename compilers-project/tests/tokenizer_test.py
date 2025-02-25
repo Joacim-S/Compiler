@@ -1,4 +1,6 @@
-from compiler.tokenizer import tokenize, Token, Location
+from compiler.location import Location
+from compiler.token import Token
+from compiler.tokenizer import tokenize
 
 L = Location('L',-1, -1)
 

@@ -1,5 +1,4 @@
 from compiler.symtab import SymTab
-from compiler.types import *
 
 TypeTab = SymTab({
   '+': lambda a, b: a + b,

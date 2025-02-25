@@ -1,9 +1,9 @@
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
+from typing import Any, Type
 
 @dataclass
-class SymTab:
-  locals: dict
+class SymTab[T]:
+  locals: dict[T, Any] = field(default_factory=dict)
   parent: Any = None
 
 TopTab = SymTab({

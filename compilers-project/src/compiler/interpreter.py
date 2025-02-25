@@ -52,7 +52,7 @@ def interperet(node: ast.Expression, symtab: SymTab) -> Value:
       return None
 
     case ast.Block():
-      local_sym = SymTab({}, symtab)
+      local_sym = SymTab['str']({}, symtab)
       for expr in node.content:
         interperet(expr, local_sym)
       return interperet(node.val, local_sym)

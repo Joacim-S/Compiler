@@ -1,4 +1,5 @@
-from compiler.tokenizer import Token, Location
+from compiler.location import Location
+from compiler.token import Token
 import compiler.ast as ast
 from compiler.types import Int, Unit, Bool, Type
 

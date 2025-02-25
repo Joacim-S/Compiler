@@ -1,6 +1,6 @@
-from dataclasses import dataclass, field
-from compiler.tokenizer import Location
 from compiler.types import Unit, Type
+from dataclasses import dataclass, field
+from compiler.location import Location
 
 @dataclass
 class Expression:

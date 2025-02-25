@@ -4,7 +4,7 @@ RUN pip install --no-cache-dir poetry==2.0.0
 RUN apk add --no-cache bash binutils
 
 WORKDIR /compiler
-COPY pyproject.toml poetry.lock .
+COPY pyproject.toml poetry.lock ./
 RUN poetry install --no-root --no-cache
 
 COPY . .
