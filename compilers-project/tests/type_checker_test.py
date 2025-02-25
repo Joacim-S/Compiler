@@ -102,3 +102,4 @@ def test_function_call() -> None:
       ast.FunctionCall(L, ast.Identifier(L, 'f'), [ast.Literal(L, 10)])
     ), TypeTab
   ) == Unit
+  

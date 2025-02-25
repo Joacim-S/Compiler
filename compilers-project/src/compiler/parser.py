@@ -193,7 +193,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
       consume()
       el = parse_expression()
     else:
-      el = ast.Literal(then.location, None)
+      el = None
     return ast.Condition(
       start_token.loc,
       con,

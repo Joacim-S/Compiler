@@ -110,7 +110,7 @@ def test_if() -> None:
   assert parse(tokens) == ast.Condition(L,
     ast.Identifier(L,'a'),
     ast.Identifier(L,'b'),
-    ast.Literal(L, None)
+    None
   )
 
   
@@ -234,7 +234,7 @@ def test_comparison() -> None:
       ast.Identifier(L,'a')
     ),
     ast.Identifier(L,'b'),
-    ast.Literal(L, None)
+    None
   )
   
 def test_assignment() -> None:
@@ -376,7 +376,7 @@ def test_blocks() -> None:
         ast.Block(L,
           [], ast.Identifier(L,'a')
         ),
-        ast.Literal(L, None)
+        None
       ),
       ], ast.Identifier(L,'b')
   )
@@ -401,7 +401,7 @@ def test_blocks() -> None:
         ast.Block(L,
           [], ast.Identifier(L,'a')
         ),
-        ast.Literal(L, None)
+        None
       ),
       ], ast.Identifier(L,'b')
   )

@@ -1,10 +1,12 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from compiler.tokenizer import Location
+from compiler.types import Unit, Type
 
 @dataclass
 class Expression:
   '''Base class for AST nodes'''
   location: Location
+  type: Type = field(kw_only=True, default=Unit)
   
 @dataclass
 class Literal(Expression):
@@ -24,7 +26,7 @@ class BinaryOp(Expression):
 class Condition(Expression):
   con: Expression
   then: Expression
-  el: Expression | Literal
+  el: Expression | None
   
 @dataclass
 class FunctionCall(Expression):

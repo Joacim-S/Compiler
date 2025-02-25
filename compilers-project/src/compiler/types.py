@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from compiler.symtab import SymTab
 
-@dataclass
+@dataclass(frozen=True)
 class Type:
   type: type | None
   

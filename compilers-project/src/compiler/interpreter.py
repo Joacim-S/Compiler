@@ -43,7 +43,9 @@ def interperet(node: ast.Expression, symtab: SymTab) -> Value:
       if interperet(node.con, symtab):
         return interperet(node.then, symtab)
       else:
-        return interperet(node.el,symtab)
+        if node.el is not None:
+          return interperet(node.el,symtab)
+        return None
       
     case ast.Declaration():
       symtab.locals[node.name.name] = interperet(node.val, symtab)
