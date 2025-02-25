@@ -47,6 +47,7 @@ class Block(Expression):
 class Declaration(Expression):
   name: Identifier
   val: Expression
+  declared_type: Type | None = None
   
 @dataclass
 class Loop(Expression):

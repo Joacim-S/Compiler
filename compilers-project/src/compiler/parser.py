@@ -1,5 +1,6 @@
 from compiler.tokenizer import Token, Location
 import compiler.ast as ast
+from compiler.types import Int, Unit, Bool, Type
 
 
 def parse(tokens: list[Token]) -> ast.Expression:
@@ -140,14 +141,27 @@ def parse(tokens: list[Token]) -> ast.Expression:
     return ast.Loop(start_token.loc, condition, do)
   
   def parse_declaration() -> ast.Expression:
+    types = {
+      'Int': Int,
+      'Bool': Bool,
+      'Unit': Unit,
+    }
+    
+    declared_type: Type | None = None
     consume('var')
     name_token = consume()
+    if peek().text == ':':
+      consume(':')
+      type_token = consume()
+      declared_type = types[type_token.text]
+      
     op_token = consume('=')
     val = parse_expression()
     return ast.Declaration(
       op_token.loc,
       name = ast.Identifier(name_token.loc, name_token.text),
-      val = val
+      val = val,
+      declared_type = declared_type
       )
   
   def parse_block() -> ast.Expression:

@@ -1,6 +1,7 @@
 from compiler.parser import parse
 from compiler.tokenizer import Token, Location
 import compiler.ast as ast
+from compiler.types import Int, Unit, Bool, Type
 
 L = Location('L',-1, -1)
 
@@ -589,4 +590,20 @@ def test_multiplse_expressions() -> None:
     ast.Literal(L,10)
   )
   ], ast.Literal(L, None)
+  )
+  
+def test_typed_decleration() -> None:
+  tokens = [
+    Token(loc=L, type='identifier', text='var'),
+    Token(loc=L, type='identifier', text='x'),
+    Token(loc=L, type='punctuation', text=':'),
+    Token(loc=L, type='identifier', text='Int'),
+    Token(loc=L, type='operator', text='='),
+    Token(loc=L, type='int_literal', text='123'),
+  ]
+  
+  assert parse(tokens) == ast.Declaration(L,
+    ast.Identifier(L,'x'),
+    ast.Literal(L,123),
+    Int
   )

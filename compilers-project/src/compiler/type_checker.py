@@ -54,6 +54,7 @@ def typecheck(node: ast.Expression, typetab: SymTab) -> Type:
         return tab.locals[node.name]
       
       case ast.Declaration():
+        t1 = typecheck(node.val, typetab)
         typetab.locals[node.name.name] = typecheck(node.val, typetab)
         return typetab.locals[node.name.name]
       
