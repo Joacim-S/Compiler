@@ -1,9 +1,7 @@
 from compiler.type_checker import typecheck
 from compiler.types import Int, Bool, Unit, Type, TypeTab
 from compiler import ast
-from compiler.ast import Location
-
-L = Location('L',-1, -1)
+from compiler.location import L
 
 def test_plus() -> None:
   assert typecheck(

@@ -1,10 +1,9 @@
 from compiler.parser import parse
-from compiler.location import Location
+from compiler.location import L, Location
 from compiler.token import Token
 import compiler.ast as ast
 from compiler.types import Int, Unit, Bool, Type
 
-L = Location('L',-1, -1)
 
 def test_single_character() -> None:
   assert parse([Token(loc=L, type='identifier', text='a')]) == ast.Identifier(L, 'a')

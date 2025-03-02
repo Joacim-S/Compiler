@@ -3,6 +3,7 @@
 from compiler import ast, ir
 from compiler.symtab import SymTab
 from compiler.types import Bool, Int, Type, Unit
+from compiler.location import Location
 
 def generate_ir(
     # 'root_types' parameter should map all global names
@@ -15,11 +16,24 @@ def generate_ir(
     # 'var_unit' is used when an expression's type is 'Unit'.
     var_unit = ir.IRVar('unit')
     var_types[var_unit] = Unit
+    
+    var_num = 1
+    label_num = 1
 
     def new_var(t: Type) -> ir.IRVar:
+        nonlocal var_num
         # Create a new unique IR variable and
         # add it to var_types
-        ...
+        var = ir.IRVar(f'x{var_num}')
+        var_num += 1
+        var_types[var] = t
+        return var
+    
+    def new_label(loc: Location) -> ir.Label:
+        nonlocal label_num
+        label = ir.Label(loc, f'L{label_num}')
+        label_num += 1
+        return label
 
     # We collect the IR instructions that we generate
     # into this list.
@@ -64,8 +78,109 @@ def generate_ir(
                 # Look up the IR variable that corresponds to
                 # the source code variable.
                 return st.require(expr.name)
+            
+            case ast.BinaryOp():
+                # Recursively emit instructions to calculate the operands.
+                var_left = visit(st, expr.left)
+                if expr.op in ['or', 'and']:
+                    l_right = new_label(loc)
+                    l_skip = new_label(loc)
+                    l_end = new_label(loc)
+                    if expr.op == 'or':
+                        ins.append(ir.CondJump(loc, var_left, l_skip, l_right))
+                    elif expr.op == 'and':
+                        ins.append(ir.CondJump(loc, var_left, l_right, l_skip))
+                    ins.append(l_right)
+                    var_rigth = visit(st, expr.right)
+                    result_var = new_var(expr.right.type)
+                    ins.append(ir.Copy(loc, var_rigth, result_var))
+                    ins.append(l_skip)
+                    ins.append(ir.LoadBoolConst(loc, True, result_var))
+                    ins.append(l_end)
+                    return result_var
+                    
+                
+                var_right = visit(st, expr.right)
+                # Generate variable to hold the result.
+                # Emit a Call instruction that writes to that variable.
+                if expr.op == '=':
+                    if not isinstance(expr.left, ast.Identifier):
+                        raise Exception
+                    ins.append(ir.Copy(
+                        loc, var_right, var_left))
+                    return var_right
+
+                var_result = new_var(expr.type)
+                # Ask the symbol table to return the variable that refers
+                # to the operator to call.
+                var_op = st.require(expr.op)
+                ins.append(ir.Call(
+                    loc, var_op, [var_left, var_right], var_result))
+                return var_result
 
             # Other AST node cases (see below)
+            
+            case ast.Condition():
+                if expr.el is None:
+                    # Create (but don't emit) some jump targets.
+                    l_then = new_label(loc)
+                    l_end = new_label(loc)
+
+                    # Recursively emit instructions for
+                    # evaluating the condition.
+                    var_cond = visit(st, expr.con)
+                    # Emit a conditional jump instruction
+                    # to jump to 'l_then' or 'l_end',
+                    # depending on the content of 'var_cond'.
+                    ins.append(ir.CondJump(loc, var_cond, l_then, l_end))
+
+                    # Emit the label that marks the beginning of
+                    # the "then" branch.
+                    ins.append(l_then)
+                    # Recursively emit instructions for the "then" branch.
+                    visit(st, expr.then)
+
+                    # Emit the label that we jump to
+                    # when we don't want to go to the "then" branch.
+                    ins.append(l_end)
+
+                    # An if-then expression doesn't return anything, so we
+                    # return a special variable "unit".
+                    return var_unit
+                else:
+                    # "if-then-else" case
+                    l_then = new_label(loc)
+                    l_else = new_label(loc)
+                    l_end = new_label(loc)
+                    var_cond = visit(st, expr.con)
+                    var_result = new_var(expr.then.type)
+                    ins.append(ir.CondJump(loc, var_cond, l_then, l_else))
+                    ins.append(l_then)
+                    var_then = visit(st, expr.then)
+                    ins.append(ir.Copy(loc, var_then, var_result))
+                    ins.append(ir.Jump(loc, l_end))
+                    ins.append(l_else)
+                    var_else = visit(st, expr.el)
+                    ins.append(ir.Copy(loc, var_else, var_result))
+                    ins.append(l_end)
+                    return var_result
+            
+            case ast.Block():
+                for b_expr in expr.content:
+                    visit(st, b_expr)
+                return visit(st, expr.val)
+            
+            case ast.Declaration():
+                result = visit(st, expr.val)
+                var = new_var(expr.val.type)
+                st.add_local(expr.name.name, var)
+                ins.append(ir.Copy(loc, result, var))
+                
+                return result
+                
+                
+            case _:
+                raise Exception
 
     # Convert 'root_types' into a SymTab
     # that maps all available global names to
@@ -81,8 +196,12 @@ def generate_ir(
     var_final_result = visit(root_symtab, root_expr)
 
     if var_types[var_final_result] == Int:
-        ... # Emit a call to 'print_int'
+        ins.append(ir.Call(
+            root_expr.location, ir.IRVar('print_int'), [var_final_result], new_var(var_types[var_final_result])
+        ))
     elif var_types[var_final_result] == Bool:
-        ... # Emit a call to 'print_bool'
+        ins.append(ir.Call(
+            root_expr.location, ir.IRVar('print_bool'), [var_final_result], new_var(var_types[var_final_result])
+        ))
 
     return ins

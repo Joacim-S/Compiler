@@ -30,7 +30,12 @@ class Instruction():
             if field.name != 'location'
         )
         return f'{type(self).__name__}({args})'
-      
+
+@dataclass(frozen=True)
+class Label(Instruction):
+    """Marks the destination of a jump instruction."""
+    name: str
+
 @dataclass(frozen=True)
 class LoadBoolConst(Instruction):
     """Loads a boolean constant value to `dest`."""
@@ -68,7 +73,4 @@ class CondJump(Instruction):
     then_label: Label
     else_label: Label
 
-@dataclass(frozen=True)
-class Label(Instruction):
-    """Marks the destination of a jump instruction."""
-    name: str
+
