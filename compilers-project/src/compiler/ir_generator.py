@@ -92,14 +92,15 @@ def generate_ir(
                         ins.append(ir.CondJump(loc, var_left, l_right, l_skip))
                     ins.append(l_right)
                     var_rigth = visit(st, expr.right)
-                    result_var = new_var(expr.right.type)
-                    ins.append(ir.Copy(loc, var_rigth, result_var))
+                    var_result = new_var(expr.right.type)
+                    ins.append(ir.Copy(loc, var_rigth, var_result))
+                    ins.append(ir.Jump(loc, l_end))
                     ins.append(l_skip)
-                    ins.append(ir.LoadBoolConst(loc, True, result_var))
+                    ins.append(ir.LoadBoolConst(loc, expr.op == 'or', var_result))
                     ins.append(l_end)
-                    return result_var
+                    return var_result
                     
-                
+
                 var_right = visit(st, expr.right)
                 # Generate variable to hold the result.
                 # Emit a Call instruction that writes to that variable.
@@ -177,8 +178,37 @@ def generate_ir(
                 ins.append(ir.Copy(loc, result, var))
                 
                 return result
+            
+            case ast.FunctionCall():
+                f = st.require(expr.name.name)
+                params = []
+                for p in expr.params:
+                    params.append(visit(st, p))
+                var_result = new_var(expr.type)
+                ins.append(ir.Call(loc, f, params, var_result))
+                return var_result
+            
+            case ast.Unary():
+                var_val = visit(st, expr.val)
+                var_result = new_var(expr.val.type)
+                f = st.require(f'unary_{expr.op}')
+                ins.append(ir.Call(loc, f, [var_val], var_result))
+                return var_result
+            
+            case ast.Loop():
+                l_start = new_label(loc)
+                l_body = new_label(loc)
+                l_end = new_label(loc)
                 
-                
+                ins.append(l_start)
+                var_con = visit(st, expr.condition)
+                ins.append(ir.CondJump(loc, var_con, l_body, l_end))
+                ins.append(l_body)
+                visit(st, expr.do)
+                ins.append(ir.Jump(loc, l_start))
+                ins.append(l_end)
+                return var_unit
+            
             case _:
                 raise Exception
 

@@ -15,6 +15,8 @@ root_types = {
   IRVar('>='): Bool,
   IRVar('<'): Bool,
   IRVar('<='): Bool,
+  IRVar('=='): Bool,
+  IRVar('!='): Bool,
   IRVar('or'): Bool,
   IRVar('and'): Bool,
   IRVar('unary_-'): Int,
@@ -160,3 +162,98 @@ true or a;''')
 for row in result:
   print(row)
 print()
+
+result = generate_ir(root_types, ast.Block(L,[
+      ast.Declaration(L,
+        ast.Identifier(L, 'a'),
+        ast.Literal(L, False)
+      )
+    ], 
+      ast.BinaryOp(L,
+      ast.Literal(L, True),
+      'and',
+      ast.Identifier(L, 'a'),
+      )))
+
+print('''var a = false;
+true and a;''')
+for row in result:
+  print(row)
+print()
+
+result = generate_ir(root_types, ast.Block(L,[
+      ast.Declaration(L,
+        ast.Identifier(L, 'a'),
+        ast.Literal(L, False)
+      )
+    ], 
+      ast.BinaryOp(L,
+      ast.Literal(L, True),
+      '==',
+      ast.Identifier(L, 'a'),
+      )))
+
+print('''var a = false;
+true == a;''')
+for row in result:
+  print(row)
+print()
+
+result = generate_ir(
+  root_types,
+  ast.FunctionCall(
+    L,
+    ast.Identifier(L, 'print_int'),
+    [ast.BinaryOp(
+      L,
+      ast.Literal(L, 2),
+      '+',
+      ast.Literal(L, 3)
+    )]
+  )
+)
+
+print('''print_int(2+3)''')
+for row in result:
+  print(row)
+print()
+
+result = generate_ir(
+  root_types,
+  ast.Unary(L, 'not', ast.Literal(L, True))
+)
+
+print('''not true''')
+for row in result:
+  print(row)
+print()
+
+result = generate_ir(
+  root_types,
+  ast.Unary(L, '-', ast.Literal(L, 5))
+)
+
+print('''-5''')
+for row in result:
+  print(row)
+print()
+
+result = generate_ir(
+  root_types,
+  ast.Loop(
+    L,
+    ast.BinaryOp(
+      L,
+      ast.Literal(L, 1),
+      '<',
+      ast.Literal(L, 0)
+    ),
+    ast.Literal(L, 1)
+  )
+)
+
+print('''while 1 < 0 do 1''')
+for row in result:
+  print(row)
+print()
+
