@@ -1,4 +1,6 @@
 from compiler import ir
+from compiler.intrinsics import all_intrinsics, IntrinsicArgs
+import dataclasses
 
 class Locals:
     """Knows the memory location of every local variable."""
@@ -7,10 +9,11 @@ class Locals:
 
     def __init__(self, variables: list[ir.IRVar]) -> None:
         loc = 0
+        self._var_to_location = {}
         for v in variables:
             loc -= 8
-            var_to_location[v] = f'{loc}(%rbp)'
-        stack_used = loc/-8
+            self._var_to_location[v] = f'{loc}(%rbp)'
+        self._stack_used = -loc
 
     def get_ref(self, v: ir.IRVar) -> str:
         """Returns an Assembly reference like `-24(%rbp)`
@@ -20,7 +23,7 @@ class Locals:
     def stack_used(self) -> int:
         """Returns the number of bytes of stack space needed for the local variables."""
         return self._stack_used
-    
+
 def get_all_ir_variables(instructions: list[ir.Instruction]) -> list[ir.IRVar]:
     result_list: list[ir.IRVar] = []
     result_set: set[ir.IRVar] = set()
@@ -48,8 +51,18 @@ def generate_assembly(instructions: list[ir.Instruction]) -> str:
     locals = Locals(
         variables=get_all_ir_variables(instructions)
     )
-
-    # ... Emit initial declarations and stack setup here ...
+    emit('.extern print_int')
+    emit('.extern print_bool')
+    emit('.extern read_int')
+    emit('.global main')
+    emit('.type main, @function')
+    emit('.section .text')
+    emit('main:')
+    for key, val in locals._var_to_location.items():
+        emit(f'# {key} in {val}')
+    emit('pushq %rbp')
+    emit('movq %rsp, %rbp')
+    emit(f'subq ${locals.stack_used()}, %rsp')
 
     for insn in instructions:
         emit('# ' + str(insn))
@@ -71,6 +84,44 @@ def generate_assembly(instructions: list[ir.Instruction]) -> str:
                     # as a temporary.
                     emit(f'movabsq ${insn.value}, %rax')
                     emit(f'movq %rax, {locals.get_ref(insn.dest)}')
+                    
             case ir.Jump():
                 emit(f'jmp .L{insn.label.name}')
-            ...  # Completed in task 2
+                
+            case ir.LoadBoolConst():
+                emit(f'movq ${int(insn.value)}, {locals.get_ref(insn.dest)}')
+            
+            case ir.Copy():
+                emit(f'movq {locals.get_ref(insn.source)}, %rax')
+                emit(f'movq %rax, {locals.get_ref(insn.dest)}')
+                
+            case ir.CondJump():
+                emit(f'cmpq $0, {locals.get_ref(insn.cond)}')
+                emit(f'jne .L{insn.then_label.name}')
+                emit(f'jmp .L{insn.else_label.name}')
+            
+            case ir.Call():
+                registers = ['rdi','rsi','rdx','rcx','r8','r9']
+                f = insn.fun
+                if f.name in all_intrinsics.keys():
+                    all_intrinsics[f.name](IntrinsicArgs(
+                        arg_refs=[locals.get_ref(a) for a in insn.args],
+                        result_register='%rax',
+                        emit = emit
+                    ))
+                else:
+                    for i in range(len(insn.args)):
+                        emit(f'movq {locals.get_ref(insn.args[i])}, %{registers[i]}')
+                    emit(f'callq {f.name}')
+                emit(f'movq %rax, {locals.get_ref(insn.dest)}')
+                
+                    
+        emit('')
+            
+    emit(f'movq $0, %rax')
+    emit(f'movq %rbp, %rsp')
+    emit(f'popq %rbp')
+    emit(f'ret')
+    emit(f'')
+    
+    return '\n'.join(lines)

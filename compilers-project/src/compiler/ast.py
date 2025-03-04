@@ -42,6 +42,14 @@ class Unary(Expression):
 class Block(Expression):
   content: list[Expression]
   val: Expression
+
+  def __str__(self) -> str:
+    rows = ['CONTENT:']
+    for c in self.content:
+      rows.append(str(c))
+    rows.append('VAL:')
+    rows.append(str(self.val))
+    return '\n'.join(rows)
   
 @dataclass
 class Declaration(Expression):

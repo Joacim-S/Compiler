@@ -584,12 +584,12 @@ def test_multiplse_expressions() -> None:
       ast.Identifier(L,'x'),
       ast.Literal(L,123),
     ),
-  ast.Declaration(
+
+  ],   ast.Declaration(
     L,
     ast.Identifier(L,'y'),
     ast.Literal(L,10)
   )
-  ], ast.Literal(L, None)
   )
   
 def test_typed_decleration() -> None:
@@ -606,4 +606,17 @@ def test_typed_decleration() -> None:
     ast.Identifier(L,'x'),
     ast.Literal(L,123),
     Int
+  )
+  
+def test_no_block_multiple_expressions() -> None:
+  tokens = [
+    Token(loc=L, type='int_literal', text='15'),
+    Token(loc=L, type='punctuation', text=';'),
+    Token(loc=L, type='int_literal', text='15'),
+  ]
+
+  assert parse(tokens) == ast.Block(
+    L,
+    [ast.Literal(L, 15)],
+    ast.Literal(L, 15)
   )

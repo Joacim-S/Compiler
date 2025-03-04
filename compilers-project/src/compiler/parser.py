@@ -89,7 +89,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
       return ast.Literal(token.loc, False)
     
     if peek().text == 'var':
-      if peek_back().text not in [';', '}']:
+      if peek_back().text not in [';', '{','}',]:
         raise Exception(
             f'''{peek().loc}: 
             Cannot declare here. 
@@ -238,22 +238,46 @@ def parse(tokens: list[Token]) -> ast.Expression:
   
   parsed = parse_expression()
   content = [parsed]
-  val: ast.Literal | ast.Expression = ast.Literal(parsed.location, None)
+  val: ast.Expression | ast.Literal = ast.Literal(Location('f',-1,-1), None)
 
   if peek().type != 'end':
+    if peek().text == ';':
+      consume(';')
+    while peek().type != 'end':
+      if val != ast.Literal(Location('f',-1,-1), None):
+        content.append(val)
+        val = ast.Literal(Location('f',-1,-1), None)
+      if peek_back().text in [';', '}']:
+        if peek().text == ';':
+          if peek_back().text == ';':
+            raise Exception(f"Unexpected token '{peek().text}' at {peek().loc}")
+          consume(';')
+        if peek().type != 'end':
+          expr = parse_expression()
+          if peek().text == ';':
+            content.append(expr)
+            consume(';')
+          else:
+            val = expr
+      else:
+        raise Exception(f"Unexpected token '{peek().text}' at {peek().loc}")
+
+    '''
     while peek().text == ';':
       consume(';')
       if peek().type != 'end':
         expr = parse_expression()
-        content.append(expr)
+        if peek().type != 'end':
+          content.append(expr)
+        else:
+          val = expr
 
     if peek().type != 'end':
-      if peek_back().text != ';':
+      if peek_back().text not in [';', '}']:
         raise Exception (f"Unexpected token '{peek().text}' at {peek().loc}")
       expr = parse_expression()
-      content.append(expr)
       val = expr
-    
+    '''
     parsed = ast.Block(parsed.location, content, val)
     
     if peek().type != 'end':

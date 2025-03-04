@@ -5,6 +5,14 @@ import sys
 from socketserver import ForkingTCPServer, StreamRequestHandler
 from traceback import format_exception
 from typing import Any
+from compiler.types import TypeTab
+from compiler.root_types import root_types
+from compiler.tokenizer import tokenize
+from compiler.parser import parse
+from compiler.type_checker import typecheck
+from compiler.ir_generator import generate_ir
+from compiler.assembly_generator import generate_assembly
+from compiler.assembler import assemble_and_get_executable
 
 
 def call_compiler(source_code: str, input_file_name: str) -> bytes:
@@ -15,6 +23,14 @@ def call_compiler(source_code: str, input_file_name: str) -> bytes:
     # The input file name is informational only: you can optionally include in your source locations and error messages,
     # or you can ignore it.
     # *** TODO ***
+    tokens = tokenize(source_code)
+    parsed = parse(tokens)
+    checked = typecheck(parsed, TypeTab)
+    ir = generate_ir(root_types, parsed)
+    assembly = generate_assembly(ir)
+    executable = assemble_and_get_executable(assembly)
+    return executable
+    
     raise NotImplementedError("Compiler not implemented")
 
 
