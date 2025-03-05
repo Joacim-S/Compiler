@@ -167,9 +167,10 @@ def generate_ir(
                     return var_result
             
             case ast.Block():
+                new_st = SymTab[ir.IRVar](parent = st)
                 for b_expr in expr.content:
-                    visit(st, b_expr)
-                return visit(st, expr.val)
+                    visit(new_st, b_expr)
+                return visit(new_st, expr.val)
             
             case ast.Declaration():
                 result = visit(st, expr.val)
@@ -177,7 +178,7 @@ def generate_ir(
                 st.add_local(expr.name.name, var)
                 ins.append(ir.Copy(loc, result, var))
                 
-                return result
+                return var_unit
             
             case ast.FunctionCall():
                 f = st.require(expr.name.name)

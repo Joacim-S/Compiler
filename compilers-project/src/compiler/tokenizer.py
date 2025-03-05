@@ -6,8 +6,8 @@ def tokenize(source_code: str) -> list[Token]:
   re_identifier = re.compile(r'[a-zA-Z_][0-9a-zA-Z_]*')
   re_int_lit = re.compile(r'[0-9]+')
   re_whitespace = re.compile(r'[ \n]+')
-  re_operator = re.compile(r'\+|-|\*|/|=|<|>|==|!=|<=|>=')
-  re_punctuation = re.compile(r'\(|\)|\{|\}|,|;')
+  re_operator = re.compile(r'==|!=|<=|>=|\+|-|\*|/|=|<|>|%')
+  re_punctuation = re.compile(r'\(|\)|\{|\}|,|;|:')
   re_comment = re.compile(r'(//|#).*|/\*(\n|.)*?\*/')
   
 

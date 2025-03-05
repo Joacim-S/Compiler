@@ -29,7 +29,7 @@ def typecheck(node: ast.Expression, typetab: SymTab) -> Type:
             raise Exception(f"{node.location}, expected matching types for '=', got {t1} and {t2}")
           return t2
         
-        if node.op in ['==, !=']:
+        if node.op in ['==', '!=']:
           if t1 != t2:
             raise Exception(f"{node.location}, expected matching types for {node.op}, got {t1} and {t2}")
           return Bool
@@ -55,8 +55,12 @@ def typecheck(node: ast.Expression, typetab: SymTab) -> Type:
       
       case ast.Declaration():
         t1 = typecheck(node.val, typetab)
-        typetab.locals[node.name.name] = typecheck(node.val, typetab)
-        return typetab.locals[node.name.name]
+        if node.declared_type is not None and node.declared_type != t1:
+          raise Exception(f"{node.location}, unmatched declared type and value type: {node.declared_type} != {t1}")
+        if typetab.locals.get(node.name.name) != None:
+          raise Exception(f"{node.location}, Variable already delcared in this scope '{node.name.name}'")
+        typetab.locals[node.name.name] = t1
+        return Unit
       
       case ast.Block():
         local_tab = SymTab['str']({}, typetab)

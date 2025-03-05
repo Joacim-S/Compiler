@@ -11,6 +11,8 @@ class SymTab[T]:
     for key in self.locals.keys():
       if str(key) == name:
         return self.locals[key]
+    if self.parent:
+      return self.parent.require(name)
     raise Exception
   
   def add_local(self, key: Any, v: T) -> None:

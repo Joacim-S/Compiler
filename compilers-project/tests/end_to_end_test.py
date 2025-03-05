@@ -1,3 +1,4 @@
+#For manual testing of the whole compiler
 from compiler.types import TypeTab
 from compiler.root_types import root_types
 from compiler.tokenizer import tokenize
@@ -16,7 +17,7 @@ def generate(source_code: str, debug: bool = False) -> str:
   if debug:
     for t in tokens:
       print(t)
-    print()
+    print() 
     print(parsed)
     print()
     print(checked)
@@ -27,7 +28,10 @@ def generate(source_code: str, debug: bool = False) -> str:
   return assembly
 
 result = generate('''
-false or true
-''', )
+{
+var x: Bool = true;
+123
+}
+''', True)
 print(result)
 assemble(result, './src/compiler/compiled')

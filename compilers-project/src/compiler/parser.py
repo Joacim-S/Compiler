@@ -77,7 +77,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
     if peek().text in ['-', 'not']:
       token = consume()
       op = token.text
-      expr = parse_expression()
+      expr = parse_expression(7)
       return ast.Unary(token.loc, op, expr)
     
     if peek().text == 'true':
@@ -184,7 +184,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
         end = consume(';')
         val = ast.Literal(end.loc, None)
         
-      elif tokens[pos-1].text != '}':
+      elif peek_back().text not in ['}', ';']:
         consume([';', '}'])
 
     consume('}')

@@ -19,4 +19,5 @@ root_types = {
   IRVar('unary_not'): Bool,
   IRVar('print_int'): Unit,
   IRVar('print_bool'): Unit,
+  IRVar('read_int'): Int
 }
