@@ -262,22 +262,6 @@ def parse(tokens: list[Token]) -> ast.Expression:
       else:
         raise Exception(f"Unexpected token '{peek().text}' at {peek().loc}")
 
-    '''
-    while peek().text == ';':
-      consume(';')
-      if peek().type != 'end':
-        expr = parse_expression()
-        if peek().type != 'end':
-          content.append(expr)
-        else:
-          val = expr
-
-    if peek().type != 'end':
-      if peek_back().text not in [';', '}']:
-        raise Exception (f"Unexpected token '{peek().text}' at {peek().loc}")
-      expr = parse_expression()
-      val = expr
-    '''
     parsed = ast.Block(parsed.location, content, val)
     
     if peek().type != 'end':

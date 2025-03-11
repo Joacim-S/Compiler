@@ -28,10 +28,14 @@ def generate(source_code: str, debug: bool = False) -> str:
   return assembly
 
 result = generate('''
-{
-var x: Bool = true;
-123
+var x = 7;
+while true do {
+    if x % 5 == 0 then {
+        break;
+    }
+    x = x + 1;
 }
+x
 ''', True)
 print(result)
 assemble(result, './src/compiler/compiled')

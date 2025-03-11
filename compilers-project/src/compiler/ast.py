@@ -61,3 +61,4 @@ class Declaration(Expression):
 class Loop(Expression):
   condition: Expression
   do: Expression
+

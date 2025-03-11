@@ -3,7 +3,7 @@
 from compiler import ast, ir
 from compiler.symtab import SymTab
 from compiler.types import Bool, Int, Type, Unit
-from compiler.location import Location
+from compiler.location import Location, L
 
 def generate_ir(
     # 'root_types' parameter should map all global names
@@ -19,6 +19,11 @@ def generate_ir(
     
     var_num = 1
     label_num = 1
+    
+    unit_label = ir.Label(L, 'UnitLabel')
+    
+    in_loop_start: ir.Label = unit_label
+    in_loop_end: ir.Label = unit_label
 
     def new_var(t: Type) -> ir.IRVar:
         nonlocal var_num
@@ -50,6 +55,8 @@ def generate_ir(
     # in the interpreter and type checker.
     def visit(st: SymTab[ir.IRVar], expr: ast.Expression) -> ir.IRVar:
         loc = expr.location
+        nonlocal in_loop_start
+        nonlocal in_loop_end
 
         match expr:
             case ast.Literal():
@@ -77,6 +84,16 @@ def generate_ir(
             case ast.Identifier():
                 # Look up the IR variable that corresponds to
                 # the source code variable.
+
+                if expr.name in ('break', 'continue') and in_loop_start.name == 'unit_label':
+                    raise Exception(f"{expr.name} not allowed outside of a loop")
+
+                elif expr.name == 'break':
+                    ins.append(ir.Jump(loc, in_loop_end))
+                
+                elif expr.name == 'continue':
+                    ins.append(ir.Jump(loc, in_loop_start))
+
                 return st.require(expr.name)
             
             case ast.BinaryOp():
@@ -197,9 +214,13 @@ def generate_ir(
                 return var_result
             
             case ast.Loop():
+                prev_start = in_loop_start
+                prev_end = in_loop_end
                 l_start = new_label(loc)
                 l_body = new_label(loc)
                 l_end = new_label(loc)
+                in_loop_start = l_start
+                in_loop_end = l_end
                 
                 ins.append(l_start)
                 var_con = visit(st, expr.condition)
@@ -208,6 +229,8 @@ def generate_ir(
                 visit(st, expr.do)
                 ins.append(ir.Jump(loc, l_start))
                 ins.append(l_end)
+                in_loop_start = prev_start
+                in_loop_end = prev_end
                 return var_unit
             
             case _:
