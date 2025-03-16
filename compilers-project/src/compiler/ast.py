@@ -63,6 +63,10 @@ class Loop(Expression):
   do: Expression
 
 @dataclass
+class Return(Expression):
+  val: Expression
+
+@dataclass
 class FunctionDefinition:
   name: Identifier
   type: Type
@@ -73,3 +77,4 @@ class FunctionDefinition:
 class Module:
   funcs: list[FunctionDefinition]
   body: Expression
+  

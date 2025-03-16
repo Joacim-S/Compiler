@@ -10,20 +10,19 @@ def generate_ir(
     # like 'print_int' and '+' to their types.
     root_types: dict[ir.IRVar, Type],
     root_module: ast.Module
-) -> dict[str, list[ir.Instruction]]:
+) -> dict[tuple, list[ir.Instruction]]:
     var_types: dict[ir.IRVar, Type] = root_types.copy()
 
     # 'var_unit' is used when an expression's type is 'Unit'.
     var_unit = ir.IRVar('unit')
     var_types[var_unit] = Unit
     
-    var_num = 1
-    label_num = 1
-    
     unit_label = ir.Label(L, 'UnitLabel')
     
     in_loop_start: ir.Label = unit_label
     in_loop_end: ir.Label = unit_label
+    label_num = 1
+    var_num = 1
 
     def new_var(t: Type) -> ir.IRVar:
         nonlocal var_num
@@ -233,8 +232,13 @@ def generate_ir(
                 in_loop_end = prev_end
                 return var_unit
             
+            case ast.Return():
+                var_result = visit(st, expr.val)
+                ins.append(ir.Return(loc, var_result))
+                return var_result
+    
             case _:
-                raise Exception
+                raise Exception(expr)
 
     # Convert 'root_types' into a SymTab
     # that maps all available global names to
@@ -246,6 +250,30 @@ def generate_ir(
     for v in root_types.keys():
         root_symtab.add_local(v.name, v)
 
+    output = {}
+    
+    for f in root_module.funcs:
+        root_symtab.add_local(f.name.name, ir.IRVar(f.name.name))
+    
+    for f in root_module.funcs:
+        parameters = []
+        var_num = 1
+        ins = []
+        for p in f.params:
+            var = ir.IRVar(p.name)
+            parameters.append(var)
+            root_symtab.add_local(p.name, var)
+        visit(root_symtab, f.body)
+        
+        if f.type == Unit:
+            ins.append(ir.Return(f.name.location, var_unit))
+
+        output[(f.name.name, tuple(parameters))] = ins
+        ins = []
+
+
+    var_num = 1
+    label_num = 1
     # Start visiting the AST from the root.
     var_final_result = visit(root_symtab, root_module.body)
 
@@ -257,5 +285,8 @@ def generate_ir(
         ins.append(ir.Call(
             root_module.body.location, ir.IRVar('print_bool'), [var_final_result], new_var(var_types[var_final_result])
         ))
+    if root_module.body.type == Unit:
+        ins.append(ir.Return(root_module.body.location, var_unit))
+    output[('main', ())] = ins
 
-    return {'main': ins}
+    return output

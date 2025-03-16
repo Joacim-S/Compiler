@@ -6,6 +6,7 @@ from compiler.types import Int, Unit, Bool, Type
 
 def parse(tokens: list[Token]) -> ast.Module:
   pos = 0
+  functions = []
   
   precedence = [
     ['='],
@@ -21,6 +22,12 @@ def parse(tokens: list[Token]) -> ast.Module:
   right_associative_operators = [
     '='
   ]
+  
+  types = {
+    'Int': Int,
+    'Bool': Bool,
+    'Unit': Unit,
+  }
 
   def peek() -> Token:
     if len(tokens) == 0:
@@ -55,12 +62,7 @@ def parse(tokens: list[Token]) -> ast.Module:
     pos += 1
     return token
 
-  def parse_factor() -> ast.Expression:
-    types = [
-      'int_literal',
-      'identifier',
-      'operator',
-    ]
+  def parse_factor() -> ast.Expression: 
     if peek().text == '(':
       return parse_parenthesized()
     
@@ -101,6 +103,9 @@ def parse(tokens: list[Token]) -> ast.Module:
     
     if peek().text == 'while':
       return parse_loop()
+
+    if peek().text == 'return':
+      return parse_return()
       
     if peek().type == 'identifier':
       token = consume()
@@ -109,7 +114,7 @@ def parse(tokens: list[Token]) -> ast.Module:
       
       return ast.Identifier(token.loc, token.text)
       
-    raise Exception(f'{peek().loc}: expected type to be in {types}, "(", got {peek().type}')
+    raise Exception(f'{peek().loc}: Unexpexted token: {peek().text}')
 
   def parse_expression(level: int = 0) -> ast.Expression:
     if level == len(precedence)-1:
@@ -134,6 +139,39 @@ def parse(tokens: list[Token]) -> ast.Module:
 
     return left
   
+  def parse_return() -> ast.Expression:
+    start_token = consume('return')
+    value = parse_expression()
+    return ast.Return(start_token.loc, value)
+    
+  def parse_function_def() -> ast.FunctionDefinition:
+    start_token = consume('fun')
+    f_name_token = consume()
+    consume('(')
+    params = []
+    while peek().text != ')':
+      name_token = consume()
+      consume(':')
+      type_token = consume(['Int', 'Unit', 'Bool'])
+      params.append(ast.Identifier(
+        location = name_token.loc,
+        type = types[type_token.text],
+        name = name_token.text
+      ))
+      if peek().text == ',':
+        consume(',')
+
+    consume(')')
+    consume(':')
+    type_token = consume(['Int', 'Unit', 'Bool'])
+    body = parse_block()
+    return ast.FunctionDefinition(
+      ast.Identifier(f_name_token.loc, f_name_token.text),
+      types[type_token.text],
+      params,
+      body
+    )
+
   def parse_loop() -> ast.Expression:
     start_token = consume('while')
     condition = parse_expression()
@@ -142,12 +180,6 @@ def parse(tokens: list[Token]) -> ast.Module:
     return ast.Loop(start_token.loc, condition, do)
   
   def parse_declaration() -> ast.Expression:
-    types = {
-      'Int': Int,
-      'Bool': Bool,
-      'Unit': Unit,
-    }
-    
     declared_type: Type | None = None
     consume('var')
     name_token = consume()
@@ -166,7 +198,6 @@ def parse(tokens: list[Token]) -> ast.Module:
       )
   
   def parse_block() -> ast.Expression:
-    nonlocal pos
     start_token = consume('{')
     content = []
     val: ast.Expression = ast.Literal(start_token.loc, None)
@@ -236,9 +267,14 @@ def parse(tokens: list[Token]) -> ast.Module:
 
     return len(precedence)
   
+  while peek().text == 'fun':
+    functions.append(parse_function_def())
+  if peek().type == 'end':
+    return ast.Module(functions, ast.Literal(Location('f',-1,-1), None))
+
   parsed = parse_expression()
   content = [parsed]
-  val: ast.Expression | ast.Literal = ast.Literal(Location('f',-1,-1), None)
+  val: ast.Expression = ast.Literal(Location('f',-1,-1), None)
 
   if peek().type != 'end':
     if peek().text == ';':
@@ -266,6 +302,5 @@ def parse(tokens: list[Token]) -> ast.Module:
     
     if peek().type != 'end':
       raise Exception(f"Unexpected token '{peek().text}' at {peek().loc}")
-    
-  
-  return ast.Module([], parsed)
+
+  return ast.Module(functions, parsed)

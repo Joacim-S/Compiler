@@ -22,19 +22,20 @@ def generate(source_code: str, debug: bool = False) -> str:
     print()
     print(checked)
     print()
-    for i in ir:
-      print(i)
+    for f in ir.keys():
+      print(f)
+      for i in ir[f]:
+        print(i)
+      print()
     print()
   return assembly
 
 result = generate('''
-var x = 7;
-while true do {
-    if x % 5 == 0 then {
-        break;
-    }
-    x = x + 1;
+fun square(x: Int): Int {
+    return x * x;
 }
-x
-''')
+
+square(3)
+''', True)
+print(result)
 assemble(result, './src/compiler/compiled')

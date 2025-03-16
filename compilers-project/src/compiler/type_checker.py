@@ -1,5 +1,5 @@
 import compiler.ast as ast
-from compiler.types import Int, Bool, Unit, Type
+from compiler.types import Int, Bool, Unit, Type, FunType
 from compiler.symtab import SymTab
 
 def typecheck(mod: ast.Module, typetab: SymTab) -> Type:
@@ -99,6 +99,12 @@ def typecheck(mod: ast.Module, typetab: SymTab) -> Type:
             raise Exception(f"{node.location}, expected {Bool} got {t1}")
           t2 = typecheck_node(node.do, typetab)
           return t2
+        
+        case ast.Return():
+          t = typecheck_node(node.val, typetab)
+          if t != get_from_tab(f.name.name, (tuple(p.type for p in f.params))):
+            raise Exception(f"{node.location}, expected {f.name.name} got {t}")
+          return t
 
         case _:
           raise NotImplemented
@@ -106,6 +112,17 @@ def typecheck(mod: ast.Module, typetab: SymTab) -> Type:
     t = get_type()
     node.type = t
     return t
+
+  for f in mod.funcs:
+    t = FunType(tuple(p.type for p in f.params), f.type)
+    typetab.locals[f.name.name] = t
+  
+  for f in mod.funcs:
+    for p in f.params:
+      typetab.locals[p.name] = p.type
+    typecheck_node(f.body, typetab)
+
+
   
   return typecheck_node(mod.body, typetab)
   

@@ -13,7 +13,7 @@ class SymTab[T]:
         return self.locals[key]
     if self.parent:
       return self.parent.require(name)
-    raise Exception
+    raise Exception(f'{name} is not defined')
   
   def add_local(self, key: Any, v: T) -> None:
     self.locals[key] = v

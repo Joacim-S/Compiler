@@ -1,6 +1,7 @@
 from compiler import ir
 from compiler.intrinsics import all_intrinsics, IntrinsicArgs
 import dataclasses
+import re
 
 class Locals:
     """Knows the memory location of every local variable."""
@@ -36,6 +37,7 @@ def get_all_ir_variables(instructions: list[ir.Instruction]) -> list[ir.IRVar]:
     for insn in instructions:
         for field in dataclasses.fields(insn):
             value = getattr(insn, field.name)
+
             if isinstance(value, ir.IRVar):
                 add(value)
             elif isinstance(value, list):
@@ -44,7 +46,8 @@ def get_all_ir_variables(instructions: list[ir.Instruction]) -> list[ir.IRVar]:
                         add(v)
     return result_list
 
-def generate_assembly(functions: dict[str, list[ir.Instruction]]) -> str:
+def generate_assembly(functions: dict[tuple, list[ir.Instruction]]) -> str:
+    registers = ['rdi','rsi','rdx','rcx','r8','r9']
     lines = []
     def emit(line: str) -> None: lines.append(line)
     emit('.extern print_int')
@@ -52,7 +55,9 @@ def generate_assembly(functions: dict[str, list[ir.Instruction]]) -> str:
     emit('.extern read_int')
     emit('.section .text')
 
-    for name, instructions in functions.items():
+    for function, instructions in functions.items():
+        name = function[0]
+        arguments = function[1]
         emit(f'.global {name}')
         emit(f'.type {name}, @function')
         emit(f'{name}:')
@@ -65,6 +70,9 @@ def generate_assembly(functions: dict[str, list[ir.Instruction]]) -> str:
             emit(f'# {key} in {val}')
         emit('pushq %rbp')
         emit('movq %rsp, %rbp')
+        loc = 0
+        for i in range(len(arguments)):
+            emit(f'movq %{registers[i]}, {locals.get_ref(arguments[i])}')
         emit(f'subq ${locals.stack_used()}, %rsp')
 
         for insn in instructions:
@@ -104,7 +112,6 @@ def generate_assembly(functions: dict[str, list[ir.Instruction]]) -> str:
                     emit(f'jmp .L{insn.else_label.name}')
                 
                 case ir.Call():
-                    registers = ['rdi','rsi','rdx','rcx','r8','r9']
                     f = insn.fun
                     if f.name in all_intrinsics.keys():
                         all_intrinsics[f.name](IntrinsicArgs(
@@ -117,14 +124,22 @@ def generate_assembly(functions: dict[str, list[ir.Instruction]]) -> str:
                             emit(f'movq {locals.get_ref(insn.args[i])}, %{registers[i]}')
                         emit(f'callq {f.name}')
                     emit(f'movq %rax, {locals.get_ref(insn.dest)}')
-                    
-                        
-            emit('')
                 
+                case ir.Return():
+                    emit(f'movq {locals.get_ref(insn.source)}, %rax')
+                    emit(f'movq %rbp, %rsp')
+                    emit(f'popq %rbp')
+                    emit(f'ret')
+                    emit(f'')
+            emit('')
+        #emit(f'addq ${locals.stack_used()}, %rsp')
+    if instructions[-1] is not ir.Return:
         emit(f'movq $0, %rax')
         emit(f'movq %rbp, %rsp')
         emit(f'popq %rbp')
         emit(f'ret')
         emit(f'')
+                        
+
     
     return '\n'.join(lines)
