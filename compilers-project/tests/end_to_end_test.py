@@ -36,6 +36,5 @@ while true do {
     x = x + 1;
 }
 x
-''', True)
-print(result)
+''')
 assemble(result, './src/compiler/compiled')

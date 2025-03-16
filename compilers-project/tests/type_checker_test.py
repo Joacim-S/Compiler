@@ -4,17 +4,17 @@ from compiler import ast
 from compiler.location import L
 
 def test_plus() -> None:
-  assert typecheck(
+  assert typecheck(ast.Module([],
     ast.BinaryOp(
       L,
       ast.Literal(L, 5),
       '+',
       ast.Literal(L, 5),
-    ), TypeTab
+    )), TypeTab
   ) == Int
 
 def test_declarations_assignments_ops() -> None:
-  assert typecheck(
+  assert typecheck(ast.Module([],
     ast.Block(
       L,
       [ast.Declaration(
@@ -32,11 +32,11 @@ def test_declarations_assignments_ops() -> None:
       ast.Identifier(L, 'a'),
       'and',
       ast.Identifier(L, 'b')
-    )), TypeTab
+    ))), TypeTab
   ) == Bool
   
 def test_unary() -> None:
-  assert typecheck(
+  assert typecheck(ast.Module([],
     ast.Block(
       L,
       [ast.Declaration(
@@ -59,45 +59,45 @@ def test_unary() -> None:
       ast.Identifier(L, 'c'),
       'and',
       ast.Identifier(L, 'b')
-    )), TypeTab
+    ))), TypeTab
   ) == Bool
   
-  assert typecheck(
+  assert typecheck(ast.Module([],
     ast.BinaryOp(
       L,
       ast.Literal(L, 5),
       '+',
       ast.Unary(L, '-', ast.Literal(L, 5)),
-    ), TypeTab
+    )), TypeTab
   ) == Int
   
   try:
-    typecheck(
+    typecheck(ast.Module([],
       ast.BinaryOp(
         L,
         ast.Literal(L, 5),
         '+',
         ast.Unary(L, 'not',  ast.Literal(L, 5)),
-      ), TypeTab
+      )), TypeTab
     )
     assert False == True
   except Exception as exc:
     assert exc.args[0] ==  """Location(file='L', line=-1, column=-1): Unsupported parameters for 'unary_not' Expected: (Type(type=<class 'bool'>),) got: (Type(type=<class 'int'>),)"""
     
 def test_function_call() -> None:
-  assert typecheck(
+  assert typecheck(ast.Module([],
     ast.FunctionCall(
       L,
       ast.Identifier(L, 'print_int'),
       [ast.Literal(L, 10)]
-    ), TypeTab
+    )), TypeTab
   ) == Unit
   
-  assert typecheck(
+  assert typecheck(ast.Module([],
     ast.Block(
       L,
       [ast.Declaration(L, ast.Identifier(L, 'f'), ast.Identifier(L, 'print_int'))],
       ast.FunctionCall(L, ast.Identifier(L, 'f'), [ast.Literal(L, 10)])
-    ), TypeTab
+    )), TypeTab
   ) == Unit
   

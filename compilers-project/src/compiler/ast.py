@@ -62,3 +62,14 @@ class Loop(Expression):
   condition: Expression
   do: Expression
 
+@dataclass
+class FunctionDefinition:
+  name: Identifier
+  type: Type
+  params: list[Identifier]
+  body: Expression
+  
+@dataclass
+class Module:
+  funcs: list[FunctionDefinition]
+  body: Expression

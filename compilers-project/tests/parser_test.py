@@ -6,7 +6,7 @@ from compiler.types import Int, Unit, Bool, Type
 
 
 def test_single_character() -> None:
-  assert parse([Token(loc=L, type='identifier', text='a')]) == ast.Identifier(L, 'a')
+  assert parse([Token(loc=L, type='identifier', text='a')]) == ast.Module([], ast.Identifier(L, 'a'))
 
 def test_one_plus_two_works() -> None:
   tokens = [
@@ -14,12 +14,12 @@ def test_one_plus_two_works() -> None:
     Token(loc=L, type='operator', text='+'),
     Token(loc=L, type='int_literal', text='2')
   ]
-  assert parse(tokens) == ast.BinaryOp(
+  assert parse(tokens) == ast.Module([], ast.BinaryOp(
     L,
       ast.Literal(L, 1),
       '+',
       ast.Literal(L, 2)
-    )
+    ))
 
 def test_a_plus_two_works() -> None:
   tokens = [
@@ -27,11 +27,11 @@ def test_a_plus_two_works() -> None:
     Token(loc=L, type='operator', text='+'),
     Token(loc=L, type='int_literal', text='2')
   ]
-  assert parse(tokens) == ast.BinaryOp(L,
+  assert parse(tokens) == ast.Module([], ast.BinaryOp(L,
       ast.Identifier(L, 'a'),
       '+',
       ast.Literal(L, 2)
-    )
+    ))
   
 def test_addition_multiplication_presedence() -> None:
   tokens = [
@@ -41,7 +41,7 @@ def test_addition_multiplication_presedence() -> None:
     Token(loc=L, type='int_literal', text='*'),
     Token(loc=L, type='int_literal', text='3'),
   ]
-  assert parse(tokens) == ast.BinaryOp(L,
+  assert parse(tokens) == ast.Module([], ast.BinaryOp(L,
     left = ast.Literal(L, 1),
     op = '+',
     right = ast.BinaryOp(L,
@@ -49,7 +49,7 @@ def test_addition_multiplication_presedence() -> None:
       '*',
       ast.Literal(L,3)
     )
-  )
+  ))
   
   tokens = [
     Token(loc=L, type='int_literal', text='1'),
@@ -58,7 +58,7 @@ def test_addition_multiplication_presedence() -> None:
     Token(loc=L, type='int_literal', text='+'),
     Token(loc=L, type='int_literal', text='3'),
   ]
-  assert parse(tokens) == ast.BinaryOp(L,
+  assert parse(tokens) == ast.Module([], ast.BinaryOp(L,
     right = ast.Literal(L,3),
     op = '+',
     left = ast.BinaryOp(L,
@@ -66,7 +66,7 @@ def test_addition_multiplication_presedence() -> None:
       '*',
       ast.Literal(L,2)
     )
-  )
+  ))
   
 def test_garbage_at_end_throws_error() -> None:
   tokens = [
@@ -91,7 +91,7 @@ def test_paranthesis() -> None:
     Token(loc=L, type='int_literal', text='*'),
     Token(loc=L, type='int_literal', text='3'),
   ]
-  assert parse(tokens) == ast.BinaryOp(L,
+  assert parse(tokens) == ast.Module([], ast.BinaryOp(L,
     left = ast.BinaryOp(L,
       ast.Literal(L,1),
       '+',
@@ -99,7 +99,7 @@ def test_paranthesis() -> None:
     ),
     op = '*',
     right = ast.Literal(L,3)
-    )
+    ))
 
 def test_if() -> None:
   tokens = [
@@ -108,11 +108,11 @@ def test_if() -> None:
     Token(loc=L, type='identifier', text='then'),
     Token(loc=L, type='identifier', text='b'),
   ]
-  assert parse(tokens) == ast.Condition(L,
+  assert parse(tokens) == ast.Module([], ast.Condition(L,
     ast.Identifier(L,'a'),
     ast.Identifier(L,'b'),
     None
-  )
+  ))
 
   
 def test_nested_if() -> None:
@@ -129,7 +129,7 @@ def test_nested_if() -> None:
     Token(loc=L, type='identifier', text='else'),
     Token(loc=L, type='identifier', text='d'),
   ]
-  assert parse(tokens) == ast.Condition(L,
+  assert parse(tokens) == ast.Module([], ast.Condition(L,
     ast.Identifier(L,'a'),
     ast.Condition(L,
       ast.Identifier(L,'x'),
@@ -137,7 +137,7 @@ def test_nested_if() -> None:
       ast.Identifier(L,'c')
     ),
     ast.Identifier(L,'d')
-  )
+  ))
 
 def test_if_as_part_of_expression() -> None:
   tokens = [
@@ -151,7 +151,7 @@ def test_if_as_part_of_expression() -> None:
     Token(loc=L, type='int_literal', text='3'),
   ]
   
-  assert parse(tokens) == ast.BinaryOp(L,
+  assert parse(tokens) == ast.Module([], ast.BinaryOp(L,
     left = ast.Literal(L,1),
     op = '+',
     right = ast.Condition(L,
@@ -159,7 +159,7 @@ def test_if_as_part_of_expression() -> None:
       ast.Literal(L,2),
       ast.Literal(L,3)
     ),
-  )
+  ))
   
 def test_function_call_no_params() -> None:
   tokens = [
@@ -167,8 +167,8 @@ def test_function_call_no_params() -> None:
     Token(loc=L, type='punctuation', text='('),
     Token(loc=L, type='punctuation', text=')'),
   ]
-  assert parse(tokens) == ast.FunctionCall(L,
-    ast.Identifier(L,'f'), [])
+  assert parse(tokens) == ast.Module([], ast.FunctionCall(L,
+    ast.Identifier(L,'f'), []))
   
 def test_function_call_single_params() -> None:
   tokens = [
@@ -179,21 +179,21 @@ def test_function_call_single_params() -> None:
     Token(loc=L, type='identifier', text='a'),
     Token(loc=L, type='punctuation', text=')'),
   ]
-  assert parse(tokens) == ast.FunctionCall(L,
+  assert parse(tokens) == ast.Module([], ast.FunctionCall(L,
     ast.Identifier(L,'f'), [
       ast.Literal(L,2),
       ast.Identifier(L,'a'),
-    ])
+    ]))
 
 def test_unary() -> None:
   tokens = [
     Token(loc=L, type='identifier', text='not'),
     Token(loc=L, type='identifier', text='a'),
   ]
-  assert parse(tokens) == ast.Unary(L,
+  assert parse(tokens) == ast.Module([], ast.Unary(L,
     'not',
     ast.Identifier(L,'a')
-  )
+  ))
   
 def test_unary_chain() -> None:
   tokens = [
@@ -203,7 +203,7 @@ def test_unary_chain() -> None:
     Token(loc=L, type='operator', text='-'),
     Token(loc=L, type='identifier', text='a'),
   ]
-  assert parse(tokens) == ast.Unary(L,
+  assert parse(tokens) == ast.Module([], ast.Unary(L,
     'not',
     ast.Unary(L,
       'not',
@@ -215,7 +215,7 @@ def test_unary_chain() -> None:
         )
       )
     )
-  )
+  ))
   
   
 def test_comparison() -> None:
@@ -228,7 +228,7 @@ def test_comparison() -> None:
     Token(loc=L, type='identifier', text='b')
   ]
   
-  assert parse(tokens) == ast.Condition(L,
+  assert parse(tokens) == ast.Module([], ast.Condition(L,
     ast.BinaryOp(L,
       ast.Literal(L,2),
       '==',
@@ -236,7 +236,7 @@ def test_comparison() -> None:
     ),
     ast.Identifier(L,'b'),
     None
-  )
+  ))
   
 def test_assignment() -> None:
   tokens = [
@@ -245,11 +245,11 @@ def test_assignment() -> None:
     Token(loc=L, type='identifier', text='b'),
   ]
   
-  assert parse(tokens) == ast.BinaryOp(L,
+  assert parse(tokens) == ast.Module([], ast.BinaryOp(L,
     ast.Identifier(L,'a'),
     '=',
     ast.Identifier(L,'b')
-  )
+  ))
   
   tokens = [
     Token(loc=L, type='identifier', text='a'),
@@ -259,7 +259,7 @@ def test_assignment() -> None:
     Token(loc=L, type='identifier', text='c'),
   ]
   
-  assert parse(tokens) == ast.BinaryOp(L,
+  assert parse(tokens) == ast.Module([], ast.BinaryOp(L,
     ast.Identifier(L,'a'),
     '=',
     ast.BinaryOp(L,
@@ -267,7 +267,7 @@ def test_assignment() -> None:
       '=',
       ast.Identifier(L,'c')
     )
-  )
+  ))
 
 def test_ors_ands() -> None:
   tokens = [
@@ -278,7 +278,7 @@ def test_ors_ands() -> None:
     Token(loc=L, type='identifier', text='c'),
   ]
   
-  assert parse(tokens) == ast.BinaryOp(L,
+  assert parse(tokens) == ast.Module([], ast.BinaryOp(L,
     ast.BinaryOp(L,
       ast.Identifier(L,'a'),
       'or',
@@ -286,7 +286,7 @@ def test_ors_ands() -> None:
     ),
     'or',
     ast.Identifier(L,'c')
-  )
+  ))
 
 def test_complicated_assignments() -> None:
   tokens = [
@@ -303,7 +303,7 @@ def test_complicated_assignments() -> None:
     Token(loc=L, type='int_literal', text='5'),
   ]
   
-  assert parse(tokens) == ast.BinaryOp(L,
+  assert parse(tokens) == ast.Module([], ast.BinaryOp(L,
     ast.Identifier(L,'a'),
     '=',
     ast.BinaryOp(L,
@@ -323,7 +323,7 @@ def test_complicated_assignments() -> None:
         )
       )
     )
-  )
+  ))
 
 def test_blocks() -> None:
   tokens = [
@@ -337,13 +337,13 @@ def test_blocks() -> None:
     Token(loc=L, type='identifier', text='}'),
   ]
 
-  assert parse(tokens) == ast.Block(L,
+  assert parse(tokens) == ast.Module([], ast.Block(L,
     [
       ast.Block(L,[],
                 ast.Identifier(L,'a')),
       ],
     ast.Block(L,[],
-              ast.Identifier(L,'b')))
+              ast.Identifier(L,'b'))))
 
   tokens = [
     Token(loc=L, type='punctuation', text='{'),
@@ -370,7 +370,7 @@ def test_blocks() -> None:
     Token(loc=L, type='punctuation', text='}'),
   ]
   
-  assert parse(tokens) == ast.Block(L,
+  assert parse(tokens) == ast.Module([], ast.Block(L,
     [
       ast.Condition(L,
         ast.Literal(L,True),
@@ -380,7 +380,7 @@ def test_blocks() -> None:
         None
       ),
       ], ast.Identifier(L,'b')
-  )
+  ))
   
   tokens = [
     Token(loc=L, type='punctuation', text='{'),
@@ -395,7 +395,7 @@ def test_blocks() -> None:
     Token(loc=L, type='identifier', text='}'),
   ]
   
-  assert parse(tokens) == ast.Block(L,
+  assert parse(tokens) == ast.Module([], ast.Block(L,
     [
       ast.Condition(L,
         ast.Literal(L,True),
@@ -405,7 +405,7 @@ def test_blocks() -> None:
         None
       ),
       ], ast.Identifier(L,'b')
-  )
+  ))
   
   tokens = [
     Token(loc=L, type='punctuation', text='{'),
@@ -442,7 +442,7 @@ def test_blocks() -> None:
     Token(loc=L, type='punctuation', text='}'),
   ]
   
-  assert parse(tokens) == ast.Block(L,
+  assert parse(tokens) == ast.Module([], ast.Block(L,
     [
       ast.Condition(L,
         ast.Literal(L,True),
@@ -454,7 +454,7 @@ def test_blocks() -> None:
         )
       ),
       ], ast.Identifier(L,'c')
-  )
+  ))
   
 def test_function_call_in_block() -> None:
   tokens = [
@@ -466,10 +466,10 @@ def test_function_call_in_block() -> None:
     Token(loc=L, type='punctuation', text='}'),
   ]
   
-  assert parse(tokens) == ast.Block(L,
+  assert parse(tokens) == ast.Module([], ast.Block(L,
     [],
     ast.FunctionCall(L,ast.Identifier(L,'f'), [ast.Identifier(L,'a')])
-  )
+  ))
   
   tokens = [
     Token(loc=L, type='identifier', text='x'),
@@ -482,14 +482,14 @@ def test_function_call_in_block() -> None:
     Token(loc=L, type='punctuation', text='}'),
   ]
   
-  assert parse(tokens) == ast.BinaryOp(L,
+  assert parse(tokens) == ast.Module([], ast.BinaryOp(L,
     ast.Identifier(L,'x'),
     '=',
     ast.Block(L,
       [],
       ast.FunctionCall(L,ast.Identifier(L,'f'), [ast.Identifier(L,'a')])
     )
-  )
+  ))
 
 
 def test_blocks_with_function_calls() -> None:
@@ -509,7 +509,7 @@ def test_blocks_with_function_calls() -> None:
     Token(loc=L, type='punctuation', text='}'),
   ]
 
-  assert parse(tokens) == ast.BinaryOp(L,
+  assert parse(tokens) == ast.Module([], ast.BinaryOp(L,
     ast.Identifier(L,'x'),
     '=',
     ast.Block(L,
@@ -519,7 +519,7 @@ def test_blocks_with_function_calls() -> None:
       ],
       val = ast.Block(L,[], ast.Identifier(L,'b'))
     )
-  )
+  ))
 
 def test_declaration() -> None:
   tokens = [
@@ -529,10 +529,10 @@ def test_declaration() -> None:
     Token(loc=L, type='int_literal', text='123'),
   ]
   
-  assert parse(tokens) == ast.Declaration(L,
+  assert parse(tokens) == ast.Module([], ast.Declaration(L,
     ast.Identifier(L,'x'),
     ast.Literal(L,123)
-  )
+  ))
   
 def test_loop() -> None:
   tokens = [
@@ -548,7 +548,7 @@ def test_loop() -> None:
     Token(loc=L, type='int_literal', text='1'),
   ]
   
-  assert(parse(tokens)) == ast.Loop(L,
+  assert parse(tokens) == ast.Module([], ast.Loop(L,
     ast.BinaryOp(
       L,
       ast.Identifier(L, 'i'),
@@ -563,7 +563,7 @@ def test_loop() -> None:
         ast.Identifier(L, 'i'),
         '+',
         ast.Literal(L, 1)))
-  )
+  ))
   
 def test_multiplse_expressions() -> None:
   tokens = [
@@ -578,7 +578,7 @@ def test_multiplse_expressions() -> None:
     Token(loc=L, type='int_literal', text='10'),
   ]
   
-  assert parse(tokens) == ast.Block(
+  assert parse(tokens) == ast.Module([], ast.Block(
     L, [ast.Declaration(
       L,
       ast.Identifier(L,'x'),
@@ -590,7 +590,7 @@ def test_multiplse_expressions() -> None:
     ast.Identifier(L,'y'),
     ast.Literal(L,10)
   )
-  )
+  ))
   
 def test_typed_decleration() -> None:
   tokens = [
@@ -602,11 +602,11 @@ def test_typed_decleration() -> None:
     Token(loc=L, type='int_literal', text='123'),
   ]
   
-  assert parse(tokens) == ast.Declaration(L,
+  assert parse(tokens) == ast.Module([], ast.Declaration(L,
     ast.Identifier(L,'x'),
     ast.Literal(L,123),
     Int
-  )
+  ))
   
 def test_no_block_multiple_expressions() -> None:
   tokens = [
@@ -615,8 +615,8 @@ def test_no_block_multiple_expressions() -> None:
     Token(loc=L, type='int_literal', text='15'),
   ]
 
-  assert parse(tokens) == ast.Block(
+  assert parse(tokens) == ast.Module([], ast.Block(
     L,
     [ast.Literal(L, 15)],
     ast.Literal(L, 15)
-  )
+  ))

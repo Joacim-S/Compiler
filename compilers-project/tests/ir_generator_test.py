@@ -26,7 +26,7 @@ root_types = {
 }
 
 
-result = generate_ir(root_types, ast.BinaryOp(
+result = generate_ir(root_types, (ast.Module([], ast.BinaryOp(
   L,
   ast.Literal(L, 1),
   '+',
@@ -36,7 +36,7 @@ result = generate_ir(root_types, ast.BinaryOp(
     '*',
     ast.Literal(L, 3)
   )
-))
+))))
 
 print('1+2*3')
 for row in result:
@@ -44,33 +44,33 @@ for row in result:
 print()
   
   
-result = generate_ir(root_types, ast.Literal(L, 5))
+result = generate_ir(root_types, ast.Module([], ast.Literal(L, 5)))
 
 print('5')
 for row in result:
   print(row)
 print()
 
-result = generate_ir(root_types, ast.Literal(L, True))
+result = generate_ir(root_types, ast.Module([], ast.Literal(L, True)))
 
 print('true')
 for row in result:
   print(row)
 print()
 
-result = generate_ir(root_types, ast.Condition(
+result = generate_ir(root_types, ast.Module([], ast.Condition(
       L,
       ast.Literal(L, False),
       ast.Literal(L, 2),
       None
-      ))
+      )))
 
 print('if false 2')
 for row in result:
   print(row)
 print()
 
-result = generate_ir(root_types, ast.Block(L,[
+result = generate_ir(root_types, ast.Module([], ast.Block(L,[
       ast.Declaration(L,
         ast.Identifier(L, 'a'),
         ast.Literal(L, 5)
@@ -86,7 +86,7 @@ result = generate_ir(root_types, ast.Block(L,[
       '*',
       ast.Literal(L, 10),
     )
-    ))
+    )))
 
 print('var a = 5; a = 100; a * 10')
 for row in result:
@@ -95,6 +95,7 @@ print()
 
 result = generate_ir(
   root_types,
+  ast.Module([],
   ast.Block(
     L,
     [
@@ -123,7 +124,7 @@ result = generate_ir(
     ],
     ast.Identifier(L, 'evr')
   )
-)
+))
 
 print('''var evr = false;
 true or { evr = true; true };
@@ -134,18 +135,19 @@ print()
 
 result = generate_ir(
   root_types,
+  ast.Module([],
   ast.Condition(
     L,
     ast.Literal(L, False),
     ast.Literal(L, 2),
     ast.Literal(L, 3)
     )
-)
+))
 for row in result:
   print(row)
 print()
 
-result = generate_ir(root_types, ast.Block(L,[
+result = generate_ir(root_types, ast.Module([], ast.Block(L,[
       ast.Declaration(L,
         ast.Identifier(L, 'a'),
         ast.Literal(L, False)
@@ -155,7 +157,7 @@ result = generate_ir(root_types, ast.Block(L,[
       ast.Literal(L, True),
       'or',
       ast.Identifier(L, 'a'),
-      )))
+      ))))
 
 print('''var a = false;
 true or a;''')
@@ -163,7 +165,7 @@ for row in result:
   print(row)
 print()
 
-result = generate_ir(root_types, ast.Block(L,[
+result = generate_ir(root_types, ast.Module([], ast.Block(L,[
       ast.Declaration(L,
         ast.Identifier(L, 'a'),
         ast.Literal(L, False)
@@ -173,7 +175,7 @@ result = generate_ir(root_types, ast.Block(L,[
       ast.Literal(L, True),
       'and',
       ast.Identifier(L, 'a'),
-      )))
+      ))))
 
 print('''var a = false;
 true and a;''')
@@ -181,7 +183,7 @@ for row in result:
   print(row)
 print()
 
-result = generate_ir(root_types, ast.Block(L,[
+result = generate_ir(root_types, ast.Module([], ast.Block(L,[
       ast.Declaration(L,
         ast.Identifier(L, 'a'),
         ast.Literal(L, False)
@@ -191,7 +193,7 @@ result = generate_ir(root_types, ast.Block(L,[
       ast.Literal(L, True),
       '==',
       ast.Identifier(L, 'a'),
-      )))
+      ))))
 
 print('''var a = false;
 true == a;''')
@@ -201,6 +203,7 @@ print()
 
 result = generate_ir(
   root_types,
+  ast.Module([],
   ast.FunctionCall(
     L,
     ast.Identifier(L, 'print_int'),
@@ -210,7 +213,7 @@ result = generate_ir(
       '+',
       ast.Literal(L, 3)
     )]
-  )
+  ))
 )
 
 print('''print_int(2+3)''')
@@ -220,8 +223,9 @@ print()
 
 result = generate_ir(
   root_types,
+  ast.Module([],
   ast.Unary(L, 'not', ast.Literal(L, True))
-)
+))
 
 print('''not true''')
 for row in result:
@@ -230,8 +234,9 @@ print()
 
 result = generate_ir(
   root_types,
+  ast.Module([],
   ast.Unary(L, '-', ast.Literal(L, 5))
-)
+))
 
 print('''-5''')
 for row in result:
@@ -240,6 +245,7 @@ print()
 
 result = generate_ir(
   root_types,
+  ast.Module([],
   ast.Loop(
     L,
     ast.BinaryOp(
@@ -249,7 +255,7 @@ result = generate_ir(
       ast.Literal(L, 0)
     ),
     ast.Literal(L, 1)
-  )
+  ))
 )
 
 print('''while 1 < 0 do 1''')

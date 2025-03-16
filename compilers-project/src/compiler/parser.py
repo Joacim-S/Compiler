@@ -4,7 +4,7 @@ import compiler.ast as ast
 from compiler.types import Int, Unit, Bool, Type
 
 
-def parse(tokens: list[Token]) -> ast.Expression:
+def parse(tokens: list[Token]) -> ast.Module:
   pos = 0
   
   precedence = [
@@ -268,4 +268,4 @@ def parse(tokens: list[Token]) -> ast.Expression:
       raise Exception(f"Unexpected token '{peek().text}' at {peek().loc}")
     
   
-  return parsed
+  return ast.Module([], parsed)

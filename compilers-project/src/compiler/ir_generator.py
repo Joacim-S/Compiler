@@ -9,8 +9,8 @@ def generate_ir(
     # 'root_types' parameter should map all global names
     # like 'print_int' and '+' to their types.
     root_types: dict[ir.IRVar, Type],
-    root_expr: ast.Expression
-) -> list[ir.Instruction]:
+    root_module: ast.Module
+) -> dict[str, list[ir.Instruction]]:
     var_types: dict[ir.IRVar, Type] = root_types.copy()
 
     # 'var_unit' is used when an expression's type is 'Unit'.
@@ -247,15 +247,15 @@ def generate_ir(
         root_symtab.add_local(v.name, v)
 
     # Start visiting the AST from the root.
-    var_final_result = visit(root_symtab, root_expr)
+    var_final_result = visit(root_symtab, root_module.body)
 
     if var_types[var_final_result] == Int:
         ins.append(ir.Call(
-            root_expr.location, ir.IRVar('print_int'), [var_final_result], new_var(var_types[var_final_result])
+            root_module.body.location, ir.IRVar('print_int'), [var_final_result], new_var(var_types[var_final_result])
         ))
     elif var_types[var_final_result] == Bool:
         ins.append(ir.Call(
-            root_expr.location, ir.IRVar('print_bool'), [var_final_result], new_var(var_types[var_final_result])
+            root_module.body.location, ir.IRVar('print_bool'), [var_final_result], new_var(var_types[var_final_result])
         ))
 
-    return ins
+    return {'main': ins}
